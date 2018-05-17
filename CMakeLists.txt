@@ -10,6 +10,6 @@ set(CMAKE_AUTOMOC ON)
 
 find_package(Qt5Widgets)
 
-add_executable(speculativeTomasulo WIN32 main.cpp MainWidget.cpp Window.cpp)
+add_executable(speculativeTomasulo WIN32 main.cpp MainWidget.cpp Window.cpp Interpreter.cpp)
 
 target_link_libraries(speculativeTomasulo Qt5::Widgets)
