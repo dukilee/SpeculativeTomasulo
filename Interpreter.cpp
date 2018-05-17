@@ -9,6 +9,7 @@ using namespace std;
 #define RESET "\x1b[0m"
 
 Interpreter::Interpreter(string nomearq){
+	execLine = 0;
 	linha = 1;
 
 	programa = fopen(nomearq.c_str(), "r");
@@ -257,14 +258,15 @@ void Interpreter::comando(){
 
 				novoAtomo();
 				if(esperado(CTE)) break;
-				c.p2.address = atom.atrib.cadeia;
+				c.p2.value = atoi(atom.atrib.cadeia.c_str());
 				listCommands.push_back(c);
 
 		}
 	}else if(atom.tipo == ID){
+		string labelName = atom.atrib.cadeia;
 		novoAtomo();
-		esperado(DPTS);
-
+		if(esperado(DPTS)) return;
+		labels[labelName] = listCommands.size();
 	}else{
 		naoEsperado(atom.tipo);
 	}
@@ -287,4 +289,31 @@ void Interpreter::listCmd(){
 	comando();
 	novoAtomo();
 	lCaux();
+}
+
+void Interpreter::runNextLine(){
+	if(execLine >= listCommands.size())
+		return;
+
+	comand c = listCommands[execLine++];
+
+	switch(c.atrib){
+		case ADD:
+			memory[c.p1.address] = memory[c.p2.address] + memory[c.p3.address];
+			break;
+		case SUB:
+			memory[c.p1.address] = memory[c.p2.address] - memory[c.p3.address];
+			break;
+		case MULT:
+			memory[c.p1.address] = memory[c.p2.address] * memory[c.p3.address];
+			break;
+		case DIV:
+			memory[c.p1.address] = memory[c.p2.address] / memory[c.p3.address];
+			break;
+		case SAVE:
+			memory[c.p1.address] = c.p2.value;
+			break;
+	}
+
+
 }

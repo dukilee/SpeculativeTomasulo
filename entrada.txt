@@ -1,5 +1,6 @@
 label:
 sw R2, 10 
 sw R3, 9
+gru:
 add R5, R2, R3
-sub R4, R1, R10
+sub R4, R1, R5

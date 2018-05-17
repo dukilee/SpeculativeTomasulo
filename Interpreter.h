@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <iostream>
 #include <vector>
+#include <map>
 
 using namespace std;
 
@@ -47,6 +48,7 @@ public:
 	FILE* programa;
 	int linha;
 	Interpreter(string nomearq);
+	int execLine;
 
 	char novoCarac();
 	atomo classificaCadeia(string cadeia);
@@ -60,8 +62,11 @@ public:
 	void comando();
 	void lCaux();
 	void listCmd();
+	void runNextLine();
 
 	vector<comand> listCommands;
+	map<string, int> labels;
+	map<string, int> memory;
 };
 
 #endif

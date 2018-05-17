@@ -24,7 +24,21 @@ int main(){
 	for(int i = 0; i<interpreter.listCommands.size(); i++){
 		//cout<<interpreter.listCommands[i].tipo<<" "<<interpreter.listCommands[i].atrib<<" "<<interpreter.listCommands[i].p1.address<endl;
 		comand c = interpreter.listCommands[i];
-		cout<<c.tipo<<" "<<c.atrib<<" "<<c.p1.address<<" "<<c.p2.address<<" "<<c.p3.address<<endl;
+		cout<<c.tipo<<" "<<c.atrib<<" "<<c.p1.address<<" "<<c.p2.address<<" "<<c.p3.address<<endl<<" "<<c.p2.value<<endl;;
+	}
+
+	for(map<string, int>::iterator it = interpreter.labels.begin(); it!=interpreter.labels.end(); it++){
+		cout<<it->first<<" "<<it->second<<endl;
+	}
+
+	for(int i = 0; i<10; i++){
+		interpreter.runNextLine();
+		cout<<i<<": "<<endl;
+		for(map<string, int>::iterator it = interpreter.memory.begin(); it!=interpreter.memory.end(); it++){
+			cout<<it->first<<" "<<it->second<<endl;
+		}
+		cout<<endl;
 	}
 }
+
 
