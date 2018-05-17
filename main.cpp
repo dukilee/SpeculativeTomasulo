@@ -19,5 +19,12 @@ int main(){
 	strcpy(nomearq, "../entrada.txt");
 
 	Interpreter interpreter("../entrada.txt");
+
+
+	for(int i = 0; i<interpreter.listCommands.size(); i++){
+		//cout<<interpreter.listCommands[i].tipo<<" "<<interpreter.listCommands[i].atrib<<" "<<interpreter.listCommands[i].p1.address<endl;
+		comand c = interpreter.listCommands[i];
+		cout<<c.tipo<<" "<<c.atrib<<" "<<c.p1.address<<" "<<c.p2.address<<" "<<c.p3.address<<endl;
+	}
 }
 

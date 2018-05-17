@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -28,6 +29,15 @@ struct atomo{
 	atribatomo atrib;
 };
 
+struct param{
+	int value;
+	string address;
+};
+
+struct comand{
+	int tipo, atrib;
+	param p1, p2, p3;
+};
 
 class Interpreter{
 public:
@@ -50,6 +60,8 @@ public:
 	void comando();
 	void lCaux();
 	void listCmd();
+
+	vector<comand> listCommands;
 };
 
 #endif

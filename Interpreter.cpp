@@ -216,36 +216,50 @@ bool Interpreter::esperado(int tipo){
 void Interpreter::comando(){
 	//printf(GREEN "comando\t" YELLOW "\t%s" RESET "\n", atom.atrib.cadeia);
 	//esperado(ID);
+	comand c;
+	c.tipo = atom.tipo;
+	c.atrib = atom.atrib.atr;
 	if(atom.tipo == COMANDO){
 		switch(atom.atrib.atr){
 			case ADD:
 			case SUB:
 			case MULT:
 			case DIV:
+
 				novoAtomo();
 				if(esperado(ID)) break;
+				c.p1.address = atom.atrib.cadeia;
 
 				novoAtomo();
 				if(esperado(VIRG)) break;
 
 				novoAtomo();
 				if(esperado(ID)) break;
+				c.p2.address = atom.atrib.cadeia;
 
 				novoAtomo();
 				if(esperado(VIRG)) break;
 
 				novoAtomo();
 				if(esperado(ID)) break;
+				c.p3.address = atom.atrib.cadeia;
+				listCommands.push_back(c);
+
 				break;
+			case LOAD:
 			case SAVE:
 				novoAtomo();
 				if(esperado(ID)) break;
+				c.p1.address = atom.atrib.cadeia;
 
 				novoAtomo();
 				if(esperado(VIRG)) break;
 
 				novoAtomo();
 				if(esperado(CTE)) break;
+				c.p2.address = atom.atrib.cadeia;
+				listCommands.push_back(c);
+
 		}
 	}else if(atom.tipo == ID){
 		novoAtomo();
