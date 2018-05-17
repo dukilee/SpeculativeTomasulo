@@ -1,5 +1,5 @@
 label:
-sw R2, 10
+sw R2,Rq 
 sw R3, 9
-addi R5, R2, R3
-sub R4, R1, R9
+add R5, R2, R3
+sub R4, R1, 10
