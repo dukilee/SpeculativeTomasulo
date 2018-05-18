@@ -31,11 +31,18 @@ int main(){
 		cout<<it->first<<" "<<it->second<<endl;
 	}
 
-	for(int i = 0; i<10; i++){
-		interpreter.runNextLine();
+	int i = 0;
+	while(	interpreter.runNextLine()){
+		i++;
 		cout<<i<<": "<<endl;
-		for(map<string, int>::iterator it = interpreter.memory.begin(); it!=interpreter.memory.end(); it++){
+		for(map<string, int>::iterator it = interpreter.reg.begin(); it!=interpreter.reg.end(); it++){
 			cout<<it->first<<" "<<it->second<<endl;
+		}
+
+		for(map<int, map<int, int> >::iterator it = interpreter.memory.begin(); it!=interpreter.memory.end(); it++){
+			for(map<int, int>::iterator it2 = it->second.begin(); it2!=it->second.end(); it2++){
+				cout<<it->first<<" "<<it2->first<<" "<<it2->second<<endl;
+			}
 		}
 		cout<<endl;
 	}

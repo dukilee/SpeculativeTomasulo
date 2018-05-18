@@ -9,7 +9,7 @@ using namespace std;
 #define RESET "\x1b[0m"
 
 Interpreter::Interpreter(string nomearq){
-	execLine = 0;
+	pc = 0;
 	linha = 1;
 
 	programa = fopen(nomearq.c_str(), "r");
@@ -55,9 +55,24 @@ atomo Interpreter::classificaCadeia(string cadeia){
 		}else if(cadeia == "sw"){
 			resp.tipo = COMANDO;
 			resp.atrib.atr = SAVE;
-		}else if(cadeia == "load"){
+		}else if(cadeia == "lw"){
 			resp.tipo = COMANDO;
 			resp.atrib.atr = LOAD;
+		}else if(cadeia == "addi"){
+			resp.tipo = COMANDO;
+			resp.atrib.atr = ADDI;
+		}else if(cadeia == "beq"){
+			resp.tipo = COMANDO;
+			resp.atrib.atr = BEQ;
+		}else if(cadeia == "ble"){
+			resp.tipo = COMANDO;
+			resp.atrib.atr = BLE;
+		}else if(cadeia == "bne"){
+			resp.tipo = COMANDO;
+			resp.atrib.atr = BNE;
+		}else if(cadeia == "li"){
+			resp.tipo = COMANDO;
+			resp.atrib.atr = LI;
 		}else{
 			resp.tipo = ID;
 		}
@@ -73,6 +88,15 @@ atomo Interpreter::classificaCadeia(string cadeia){
 			break;
 		case 0:
 			resp.tipo = FINAL;
+			break;
+		case ';':
+			resp.tipo = COMMENT;
+			break;
+		case '(':
+			resp.tipo = ABPAR;
+			break;
+		case ')':
+			resp.tipo = FPAR;
 			break;
 		default:
 			resp.tipo = INVAL;
@@ -99,10 +123,16 @@ void Interpreter::novoAtomo(){
 			switch(carac){ 
 			case ':':
 			case ',':
+			case '(':
+			case ')':
 				cadeia.push_back(carac);
 				atom = classificaCadeia(cadeia);
 				carac = novoCarac();
 				estado = 3;
+				break;
+			case ';':
+				estado = 5;
+				carac = novoCarac();
 				break;
 			default:
 				if(isalpha(carac)){
@@ -147,6 +177,12 @@ void Interpreter::novoAtomo(){
 				estado = 3;
 			}
 			break;
+		case 5:
+			if(carac=='\n'){
+				estado = 3;
+				atom = classificaCadeia(cadeia);
+				carac = novoCarac();
+			}
 
 		}
 	}
@@ -166,6 +202,9 @@ string Interpreter::converteTipoPraNome(int tipo){
 		case FINAL: nome = "FINAL"; break;
 		case INVAL: nome = "INVAL"; break;
 		case CTE: nome = "CTE"; break;
+		case COMMENT: nome = "COMMENT"; break;
+		case ABPAR: nome = "ABPAR"; break;
+		case FPAR: nome = "FPAR"; break;
 		default: nome = "UNDEFINED"; break;
 	}
 	return nome;
@@ -181,6 +220,11 @@ string Interpreter::converteAtribPraNome(int atrib){
 		case DIV: nome = "DIV"; break;
 		case SAVE: nome = "SW"; break;
 		case LOAD: nome = "LOAD"; break;
+		case ADDI: nome = "ADDI"; break;
+		case BLE: nome = "BLE"; break;
+		case BEQ: nome = "BEQ"; break;
+		case BNE: nome = "BNE"; break;
+		case LI: nome = "LI"; break;
 		default: nome = "UNDEFINED"; break;
 	}
 	return nome;
@@ -226,6 +270,9 @@ void Interpreter::comando(){
 			case SUB:
 			case MULT:
 			case DIV:
+			case BLE:
+			case BNE:
+			case BEQ:
 
 				novoAtomo();
 				if(esperado(ID)) break;
@@ -247,8 +294,27 @@ void Interpreter::comando(){
 				listCommands.push_back(c);
 
 				break;
-			case LOAD:
-			case SAVE:
+			case ADDI:
+				novoAtomo();
+				if(esperado(ID)) break;
+				c.p1.address = atom.atrib.cadeia;
+
+				novoAtomo();
+				if(esperado(VIRG)) break;
+
+				novoAtomo();
+				if(esperado(ID)) break;
+				c.p2.address = atom.atrib.cadeia;
+
+				novoAtomo();
+				if(esperado(VIRG)) break;
+
+				novoAtomo();
+				if(esperado(CTE)) break;
+				c.p3.value = atoi(atom.atrib.cadeia.c_str());
+				listCommands.push_back(c);
+				break;
+			case LI:
 				novoAtomo();
 				if(esperado(ID)) break;
 				c.p1.address = atom.atrib.cadeia;
@@ -260,6 +326,33 @@ void Interpreter::comando(){
 				if(esperado(CTE)) break;
 				c.p2.value = atoi(atom.atrib.cadeia.c_str());
 				listCommands.push_back(c);
+				break;
+
+			case LOAD:
+			case SAVE:
+				novoAtomo();
+				if(esperado(ID)) break;
+				c.p1.address = atom.atrib.cadeia;
+
+				novoAtomo();
+				if(esperado(VIRG)) break;
+
+
+				novoAtomo();
+				if(esperado(CTE)) break;
+				c.p2.value = atoi(atom.atrib.cadeia.c_str());
+
+				novoAtomo();
+				if(esperado(ABPAR)) break;
+
+				novoAtomo();
+				if(esperado(ID)) break;
+				c.p3.address = atom.atrib.cadeia;
+
+				novoAtomo();
+				if(esperado(FPAR)) break;
+				listCommands.push_back(c);
+				break;
 
 		}
 	}else if(atom.tipo == ID){
@@ -291,29 +384,56 @@ void Interpreter::listCmd(){
 	lCaux();
 }
 
-void Interpreter::runNextLine(){
-	if(execLine >= listCommands.size())
-		return;
+bool Interpreter::runNextLine(){
+	if(pc >= listCommands.size())
+		return false;;
 
-	comand c = listCommands[execLine++];
+	comand c = listCommands[pc++];
 
 	switch(c.atrib){
 		case ADD:
-			memory[c.p1.address] = memory[c.p2.address] + memory[c.p3.address];
+			reg[c.p1.address] = reg[c.p2.address] + reg[c.p3.address];
+			break;
+		case ADDI:
+			reg[c.p1.address] = reg[c.p2.address] + c.p3.value;
 			break;
 		case SUB:
-			memory[c.p1.address] = memory[c.p2.address] - memory[c.p3.address];
+			reg[c.p1.address] = reg[c.p2.address] - reg[c.p3.address];
 			break;
 		case MULT:
-			memory[c.p1.address] = memory[c.p2.address] * memory[c.p3.address];
+			reg[c.p1.address] = reg[c.p2.address] * reg[c.p3.address];
 			break;
 		case DIV:
-			memory[c.p1.address] = memory[c.p2.address] / memory[c.p3.address];
+			reg[c.p1.address] = reg[c.p2.address] / reg[c.p3.address];
+			break;
+		case LI:
+			reg[c.p1.address] = c.p2.value;
 			break;
 		case SAVE:
-			memory[c.p1.address] = c.p2.value;
+			memory[c.p2.value][reg[c.p3.address]] = reg[c.p1.address];
 			break;
+		case LOAD:
+			reg[c.p1.address] = memory[c.p2.value][reg[c.p3.address]];
+			break;
+		case BEQ:
+			if(reg[c.p1.address] == reg[c.p2.address]){
+				stk.push(pc);
+				pc = labels[c.p3.address];
+				break;
+			}
+		case BNE:
+			if(reg[c.p1.address] != reg[c.p2.address]){
+				stk.push(pc);
+				pc = labels[c.p3.address];
+				break;
+			}
+		case BLE:
+			if(reg[c.p1.address] <= reg[c.p2.address]){
+				stk.push(pc);
+				pc = labels[c.p3.address];
+				break;
+			}
 	}
 
-
+	return true;
 }

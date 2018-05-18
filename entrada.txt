@@ -1,6 +1,9 @@
-label:
-sw R2, 10 
-sw R3, 9
-gru:
-add R5, R2, R3
-sub R4, R1, R5
+li r1, 0
+li r2, 10
+sw r2, 1(r1)
+loop:
+addi r1, r1, 1
+ble r1, r2, loop
+li r1, 0
+lw r3, 1(r1)
+

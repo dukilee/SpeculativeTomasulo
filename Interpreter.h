@@ -9,14 +9,15 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <stack>
 
 using namespace std;
 
 //DEFINES
 enum ENUM_TIPOS{BEGIN=1, PROGRAM, DPTS, VIRG, ID, CTE,
-INVAL, COMANDO, FINAL};
+INVAL, COMANDO, ABPAR, FPAR, COMMENT, FINAL};
 
-enum ENUM_ATRIB{ADD=1, SUB, MULT, DIV, SAVE, LOAD};
+enum ENUM_ATRIB{ADD=1, SUB, MULT, DIV, SAVE, LOAD, ADDI, BEQ, BLE, BNE, LI};
 
 //STRUCTS
 struct atribatomo{
@@ -48,7 +49,7 @@ public:
 	FILE* programa;
 	int linha;
 	Interpreter(string nomearq);
-	int execLine;
+	int pc;
 
 	char novoCarac();
 	atomo classificaCadeia(string cadeia);
@@ -62,11 +63,13 @@ public:
 	void comando();
 	void lCaux();
 	void listCmd();
-	void runNextLine();
+	bool runNextLine();
 
 	vector<comand> listCommands;
 	map<string, int> labels;
-	map<string, int> memory;
+	map<string, int> reg;
+	map<int, map<int, int> > memory;
+	stack<int> stk;
 };
 
 #endif
