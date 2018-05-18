@@ -48,6 +48,9 @@ int main(){
 		cout<<endl;
 		getchar();
 	}
+	for(map<string, Reg>::iterator it = interpreter.reg.begin(); it!=interpreter.reg.end(); it++){
+		cout<<it->first<<" "<<it->second.value<<" "<<it->second.dataDependency<<endl;
+	}
 }
 
 

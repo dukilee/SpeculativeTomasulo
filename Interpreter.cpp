@@ -11,6 +11,7 @@ using namespace std;
 Interpreter::Interpreter(string nomearq){
 	pc = 0;
 	linha = 1;
+	clock = 0;
 
 	programa = fopen(nomearq.c_str(), "r");
 
@@ -23,6 +24,9 @@ Interpreter::Interpreter(string nomearq){
 	numLoads = 2;
 	numAdds = 3;
 	numMults = 2;
+	timeToFinishLoad = 4;
+	timeToFinishAdd = 2;
+	timeToFinishMult = 3;
 
 	firstLoads = 0;
 	lastLoads = numLoads - 1;
@@ -425,10 +429,10 @@ void Interpreter::listCmd(){
 	lCaux();
 }
 
-void Interpreter::runCommand(comand c){
+int Interpreter::runCommand(comand c, int vj, int vk){
 	switch(c.atrib){
 		case ADD:
-			reg[c.p1.address].value = reg[c.p2.address].value + reg[c.p3.address].value;
+			return vj + vk;
 			break;
 		case ADDI:
 			reg[c.p1.address].value = reg[c.p2.address].value + c.p3.value;
@@ -443,7 +447,7 @@ void Interpreter::runCommand(comand c){
 			reg[c.p1.address].value = reg[c.p2.address].value / reg[c.p3.address].value;
 			break;
 		case LI:
-			reg[c.p1.address].value = c.p2.value;
+			return vj;
 			break;
 		case SAVE:
 			memory[c.p2.value][reg[c.p3.address].value] = reg[c.p1.address].value;
@@ -504,6 +508,7 @@ void Interpreter::runCommand(comand c){
 			break;
 			
 	}
+	return -19;
 }
 
 void Interpreter::tryToGetValue(int id, char ch, string address){
@@ -511,14 +516,9 @@ void Interpreter::tryToGetValue(int id, char ch, string address){
 		if(ch=='j') tomasuloTable[id].qj = reg[address].value;
 		else tomasuloTable[id].qk = reg[address].value;
 	}else{
-		if(ch=='j'){
-			tomasuloTable[id].vj = reg[address].value;
-			tomasuloTable[id].qj = -1;
-		}
-		else{
-			tomasuloTable[id].vk = reg[address].value;
-			tomasuloTable[id].qk = -1;
-		}
+		if(ch=='j') tomasuloTable[id].vj = reg[address].value;
+		else tomasuloTable[id].vk = reg[address].value;
+		
 	}
 }
 
@@ -530,37 +530,92 @@ int Interpreter::getNextEmpty(int first, int last){
 
 	tomasuloTable[id].busy = true;
 	tomasuloTable[id].op = pc-1;
+	tomasuloTable[id].qj = -1;
+	tomasuloTable[id].qk = -1;
+	return id;
+}
+
+bool Interpreter::hasEnded(){
+	if(clock<=1) return true;
+	for(int i = 0; i<tomasuloTable.size(); i++){
+		if(tomasuloTable[i].busy) return true;
+	}
+	return false;
+}
+
+void Interpreter::continueCommand(int id){
+	comand c = listCommands[tomasuloTable[id].op];
+	int val = runCommand(c, tomasuloTable[id].vj, tomasuloTable[id].vk);
+
+	if(reg[c.p1.address].dataDependency && reg[c.p1.address].value == id){
+		reg[c.p1.address].dataDependency = false;
+		reg[c.p1.address].value = val;
+	}
+	
+
+	for(int i = 0; i<tomasuloTable.size(); i++){
+		if(!tomasuloTable[i].busy) continue;
+		if(tomasuloTable[i].qj == id){
+			tomasuloTable[i].vj = val;
+			tomasuloTable[i].qj = -1;
+		}
+		if(tomasuloTable[i].qk == id){
+			tomasuloTable[i].vk = val;
+			tomasuloTable[i].qk = -1;
+		}
+	}
+	tomasuloTable[id].busy = false;
+	
 }
 
 bool Interpreter::runNextLine(){
+	clock++;
+	int id = -1;
+
+	for(int i = 0; i<tomasuloTable.size(); i++){
+		
+		if(tomasuloTable[i].busy && tomasuloTable[i].qk==-1 && tomasuloTable[i].qj == -1 && tomasuloTable[i].clockToFinish<=clock){
+			continueCommand(i);
+			tomasuloTable[i].busy = false;
+			break;
+		}
+	}
+
 	if(pc >= listCommands.size())
-		return false;
+		return hasEnded();
 
 	comand c = listCommands[pc++];
-	int id;
 
 	switch(c.atrib){
 		case ADD:
 			id = getNextEmpty(firstAdds, lastAdds);
 			tryToGetValue(id, 'j', c.p2.address);
 			tryToGetValue(id, 'k', c.p3.address);
-			
+			reg[c.p1.address].dataDependency = true;
+			reg[c.p1.address].value = id;
 			break;
 		case LI:
 			id = getNextEmpty(firstLoads, lastLoads);
 			reg[c.p1.address].dataDependency = true;
 			reg[c.p1.address].value = id;
+			tomasuloTable[id].vj = c.p2.value;
+			tomasuloTable[id].clockToFinish = clock + timeToFinishLoad;
 			break;
 			
 
 	}
 
-	return true;
+
+
+	return hasEnded();
 }
 
 void Interpreter::printTomasuloTable(){
+	cout<<"clock: "<<clock<<endl;
+	printf("name  b op  vj  vk qj qk  d ctf\n");
 	for(vector<TomasuloTable>::iterator it = tomasuloTable.begin(); it!=tomasuloTable.end(); it++){
-		cout<<it->name<<" "<<it->busy<<" "<<it->op<<" "<<it->vj<<" "<<it->vk<<" "<<it->qj<<" "<<it->qk<<" "<<it->d<<" "<<endl;
+		cout<<it->name<<" "<<it->busy<<" ";
+		printf("%2d %3d %3d %2d %2d %2d %3d\n", it->op, it->vj, it->vk, it->qj, it->qk, it->d, it->clockToFinish);
 	}
 	cout<<endl;
 }

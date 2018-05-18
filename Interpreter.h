@@ -67,6 +67,7 @@ public:
 	int linha;
 	Interpreter(string nomearq);
 	int pc;
+	int clock;
 
 	char novoCarac();
 	atomo classificaCadeia(string cadeia);
@@ -82,9 +83,11 @@ public:
 	void listCmd();
 	bool runNextLine();
 	void printTomasuloTable();
-	void runCommand(comand c);
+	int runCommand(comand c, int vj, int vk);
 	void tryToGetValue(int id, char ch, string address);
 	int getNextEmpty(int first, int last);
+	bool hasEnded();
+	void continueCommand(int id);
 
 	vector<comand> listCommands;
 	map<string, int> labels;
@@ -103,6 +106,10 @@ public:
 	int firstLoads, lastLoads;
 	int firstAdds, lastAdds;
 	int firstMults, lastMults;
+
+	int timeToFinishLoad;
+	int timeToFinishMult;
+	int timeToFinishAdd;
 };
 
 #endif
