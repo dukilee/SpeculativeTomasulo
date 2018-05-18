@@ -73,6 +73,12 @@ atomo Interpreter::classificaCadeia(string cadeia){
 		}else if(cadeia == "li"){
 			resp.tipo = COMANDO;
 			resp.atrib.atr = LI;
+		}else if(cadeia == "return"){
+			resp.tipo = COMANDO;
+			resp.atrib.atr = RETURN;
+		}else if(cadeia == "goto"){
+			resp.tipo = COMANDO;
+			resp.atrib.atr = GOTO;
 		}else{
 			resp.tipo = ID;
 		}
@@ -225,6 +231,8 @@ string Interpreter::converteAtribPraNome(int atrib){
 		case BEQ: nome = "BEQ"; break;
 		case BNE: nome = "BNE"; break;
 		case LI: nome = "LI"; break;
+		case RETURN: nome = "return"; break;
+		case GOTO: nome = "nome"; break;
 		default: nome = "UNDEFINED"; break;
 	}
 	return nome;
@@ -353,7 +361,15 @@ void Interpreter::comando(){
 				if(esperado(FPAR)) break;
 				listCommands.push_back(c);
 				break;
-
+			case RETURN:
+				listCommands.push_back(c);
+				break;
+			case GOTO:
+				novoAtomo();
+				if(esperado(ID)) break;
+				c.p1.address = atom.atrib.cadeia;
+				listCommands.push_back(c);
+				break;
 		}
 	}else if(atom.tipo == ID){
 		string labelName = atom.atrib.cadeia;
@@ -418,21 +434,55 @@ bool Interpreter::runNextLine(){
 		case BEQ:
 			if(reg[c.p1.address] == reg[c.p2.address]){
 				stk.push(pc);
-				pc = labels[c.p3.address];
-				break;
+				map<string, int>::iterator it = labels.find(c.p3.address);
+				if(it == labels.end()){
+					printf("The label '" RED "%s" RESET "' wasn't defined.\n", c.p3.address.c_str());
+				}else{
+					stk.push(pc);
+					pc = it->second;
+				}
+
 			}
+			break;
 		case BNE:
 			if(reg[c.p1.address] != reg[c.p2.address]){
-				stk.push(pc);
-				pc = labels[c.p3.address];
-				break;
+				map<string, int>::iterator it = labels.find(c.p3.address);
+				if(it == labels.end()){
+					printf("The label '" RED "%s" RESET "' wasn't defined.\n", c.p3.address.c_str());
+				}else{
+					stk.push(pc);
+					pc = it->second;
+				}
 			}
+			break;
 		case BLE:
 			if(reg[c.p1.address] <= reg[c.p2.address]){
-				stk.push(pc);
-				pc = labels[c.p3.address];
-				break;
+				map<string, int>::iterator it = labels.find(c.p3.address);
+				if(it == labels.end()){
+					printf("The label '" RED "%s" RESET "' wasn't defined.\n", c.p3.address.c_str());
+				}else{
+					stk.push(pc);
+					pc = it->second;
+				}
 			}
+			break;
+		case RETURN:
+			if(!stk.empty()){
+				pc = stk.top();
+				stk.pop();
+			}else{
+				printf("'" RED "RETURN" RESET "' miss use\n");
+			}
+			break;
+		case GOTO:
+			map<string, int>::iterator it = labels.find(c.p1.address);
+			if(it == labels.end()){
+				printf("The label '" RED "%s" RESET "' wasn't defined.\n", c.p3.address.c_str());
+			}else{
+				pc = it->second;
+			}
+			break;
+			
 	}
 
 	return true;
