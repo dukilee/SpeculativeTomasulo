@@ -513,6 +513,7 @@ int Interpreter::runCommand(comand c, int vj, int vk){
 
 void Interpreter::tryToGetValue(int id, char ch, string address){
 	if(reg[address].dataDependency){
+
 		if(ch=='j') tomasuloTable[id].qj = reg[address].value;
 		else tomasuloTable[id].qk = reg[address].value;
 	}else{
@@ -532,6 +533,7 @@ int Interpreter::getNextEmpty(int first, int last){
 	tomasuloTable[id].op = pc-1;
 	tomasuloTable[id].qj = -1;
 	tomasuloTable[id].qk = -1;
+	cout<<id<<" "<<tomasuloTable[id].busy<<endl;
 	return id;
 }
 
@@ -553,15 +555,23 @@ void Interpreter::continueCommand(int id){
 	}
 	
 
+	bool changed = false;
 	for(int i = 0; i<tomasuloTable.size(); i++){
 		if(!tomasuloTable[i].busy) continue;
+		changed = false;
 		if(tomasuloTable[i].qj == id){
 			tomasuloTable[i].vj = val;
 			tomasuloTable[i].qj = -1;
+			changed = true;
 		}
 		if(tomasuloTable[i].qk == id){
 			tomasuloTable[i].vk = val;
 			tomasuloTable[i].qk = -1;
+			changed = true;
+		}
+
+		if(changed && tomasuloTable[i].qk == -1 && tomasuloTable[i].qj == -1){
+			tomasuloTable[i].clockToFinish += clock;
 		}
 	}
 	tomasuloTable[id].busy = false;
@@ -576,7 +586,6 @@ bool Interpreter::runNextLine(){
 		
 		if(tomasuloTable[i].busy && tomasuloTable[i].qk==-1 && tomasuloTable[i].qj == -1 && tomasuloTable[i].clockToFinish<=clock){
 			continueCommand(i);
-			tomasuloTable[i].busy = false;
 			break;
 		}
 	}
@@ -591,19 +600,18 @@ bool Interpreter::runNextLine(){
 			id = getNextEmpty(firstAdds, lastAdds);
 			tryToGetValue(id, 'j', c.p2.address);
 			tryToGetValue(id, 'k', c.p3.address);
-			reg[c.p1.address].dataDependency = true;
-			reg[c.p1.address].value = id;
+			tomasuloTable[id].clockToFinish = timeToFinishAdd;
 			break;
 		case LI:
 			id = getNextEmpty(firstLoads, lastLoads);
-			reg[c.p1.address].dataDependency = true;
-			reg[c.p1.address].value = id;
 			tomasuloTable[id].vj = c.p2.value;
 			tomasuloTable[id].clockToFinish = clock + timeToFinishLoad;
 			break;
 			
 
 	}
+	reg[c.p1.address].dataDependency = true;
+	reg[c.p1.address].value = id;
 
 
 
