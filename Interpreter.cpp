@@ -19,6 +19,31 @@ Interpreter::Interpreter(string nomearq){
 	
 	novoAtomo();
 	lCaux();
+
+	numLoads = 2;
+	numAdds = 3;
+	numMults = 2;
+
+	firstLoads = 0;
+	lastLoads = numLoads - 1;
+	firstAdds = lastLoads + 1;;
+	lastAdds = firstAdds + numAdds - 1;
+	firstMults = lastAdds + 1;
+	lastMults = firstMults + numMults - 1;
+
+	tomasuloTable.resize(numLoads + numAdds + numMults);
+	for(int i = 0; i<numLoads; i++){
+		tomasuloTable[i].name = "LOAD0";
+		tomasuloTable[i].name[4] = i + 48;
+	}
+	for(int i = 0; i<numAdds; i++){
+		tomasuloTable[i+numLoads].name = "ADDD0";
+		tomasuloTable[i+numLoads].name[4] = i + 48;
+	}
+	for(int i = 0; i<numMults; i++){
+		tomasuloTable[i+numLoads+numAdds].name = "MULT0";
+		tomasuloTable[i+numLoads+numAdds].name[4] = i + 48;
+	}
 }
 
 //FUNCTIONS
@@ -400,39 +425,34 @@ void Interpreter::listCmd(){
 	lCaux();
 }
 
-bool Interpreter::runNextLine(){
-	if(pc >= listCommands.size())
-		return false;;
-
-	comand c = listCommands[pc++];
-
+void Interpreter::runCommand(comand c){
 	switch(c.atrib){
 		case ADD:
-			reg[c.p1.address] = reg[c.p2.address] + reg[c.p3.address];
+			reg[c.p1.address].value = reg[c.p2.address].value + reg[c.p3.address].value;
 			break;
 		case ADDI:
-			reg[c.p1.address] = reg[c.p2.address] + c.p3.value;
+			reg[c.p1.address].value = reg[c.p2.address].value + c.p3.value;
 			break;
 		case SUB:
-			reg[c.p1.address] = reg[c.p2.address] - reg[c.p3.address];
+			reg[c.p1.address].value = reg[c.p2.address].value - reg[c.p3.address].value;
 			break;
 		case MULT:
-			reg[c.p1.address] = reg[c.p2.address] * reg[c.p3.address];
+			reg[c.p1.address].value = reg[c.p2.address].value * reg[c.p3.address].value;
 			break;
 		case DIV:
-			reg[c.p1.address] = reg[c.p2.address] / reg[c.p3.address];
+			reg[c.p1.address].value = reg[c.p2.address].value / reg[c.p3.address].value;
 			break;
 		case LI:
-			reg[c.p1.address] = c.p2.value;
+			reg[c.p1.address].value = c.p2.value;
 			break;
 		case SAVE:
-			memory[c.p2.value][reg[c.p3.address]] = reg[c.p1.address];
+			memory[c.p2.value][reg[c.p3.address].value] = reg[c.p1.address].value;
 			break;
 		case LOAD:
-			reg[c.p1.address] = memory[c.p2.value][reg[c.p3.address]];
+			reg[c.p1.address].value = memory[c.p2.value][reg[c.p3.address].value];
 			break;
 		case BEQ:
-			if(reg[c.p1.address] == reg[c.p2.address]){
+			if(reg[c.p1.address].value == reg[c.p2.address].value){
 				stk.push(pc);
 				map<string, int>::iterator it = labels.find(c.p3.address);
 				if(it == labels.end()){
@@ -445,7 +465,7 @@ bool Interpreter::runNextLine(){
 			}
 			break;
 		case BNE:
-			if(reg[c.p1.address] != reg[c.p2.address]){
+			if(reg[c.p1.address].value != reg[c.p2.address].value){
 				map<string, int>::iterator it = labels.find(c.p3.address);
 				if(it == labels.end()){
 					printf("The label '" RED "%s" RESET "' wasn't defined.\n", c.p3.address.c_str());
@@ -456,7 +476,7 @@ bool Interpreter::runNextLine(){
 			}
 			break;
 		case BLE:
-			if(reg[c.p1.address] <= reg[c.p2.address]){
+			if(reg[c.p1.address].value <= reg[c.p2.address].value){
 				map<string, int>::iterator it = labels.find(c.p3.address);
 				if(it == labels.end()){
 					printf("The label '" RED "%s" RESET "' wasn't defined.\n", c.p3.address.c_str());
@@ -484,6 +504,37 @@ bool Interpreter::runNextLine(){
 			break;
 			
 	}
+}
+
+
+bool Interpreter::runNextLine(){
+	if(pc >= listCommands.size())
+		return false;;
+
+	comand c = listCommands[pc++];
+	runCommand(c);
+
+	switch(c.atrib){
+		case ADD:
+			int id = firstAdds;
+			while(id<=lastAdds && tomasuloTable[firstAdds].busy){
+				id++;
+			}
+			tomasuloTable[id].busy = true;
+			tomasuloTable[id].op = pc-1;
+			tomasuloTable[id].vj = reg[c.p2.address].value;
+			tomasuloTable[id].vk = reg[c.p2.address].value;
+			
+			break;
+			
+	}
 
 	return true;
+}
+
+void Interpreter::printTomasuloTable(){
+	for(vector<TomasuloTable>::iterator it = tomasuloTable.begin(); it!=tomasuloTable.end(); it++){
+		cout<<it->name<<" "<<it->busy<<" "<<it->op<<" "<<it->vj<<" "<<it->vk<<" "<<it->qj<<" "<<it->qk<<" "<<it->d<<" "<<endl;
+	}
+	cout<<endl;
 }

@@ -39,6 +39,23 @@ struct param{
 struct comand{
 	int tipo, atrib;
 	param p1, p2, p3;
+	bool jmp;
+};
+
+struct TomasuloTable{
+	string name;
+	int clockToFinish, op;
+	int vj, vk, qj, qk, d, a;
+	bool busy;
+};
+
+struct SpeculativeTable{
+	int op, state, des, value;
+};
+
+struct Reg{
+	int value;
+	bool dataDependency;
 };
 
 class Interpreter{
@@ -64,12 +81,26 @@ public:
 	void lCaux();
 	void listCmd();
 	bool runNextLine();
+	void printTomasuloTable();
+	void runCommand(comand c);
 
 	vector<comand> listCommands;
 	map<string, int> labels;
-	map<string, int> reg;
+	map<string, Reg> reg;
 	map<int, map<int, int> > memory;
+
+	vector<TomasuloTable> tomasuloTable;
+	vector<SpeculativeTable> speculativeTable;
+	
 	stack<int> stk;
+
+	int numLoads;
+	int numAdds;
+	int numMults;
+
+	int firstLoads, lastLoads;
+	int firstAdds, lastAdds;
+	int firstMults, lastMults;
 };
 
 #endif

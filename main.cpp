@@ -35,8 +35,8 @@ int main(){
 	while(	interpreter.runNextLine()){
 		i++;
 		cout<<i<<": "<<endl;
-		for(map<string, int>::iterator it = interpreter.reg.begin(); it!=interpreter.reg.end(); it++){
-			cout<<it->first<<" "<<it->second<<endl;
+		for(map<string, Reg>::iterator it = interpreter.reg.begin(); it!=interpreter.reg.end(); it++){
+			cout<<it->first<<" "<<it->second.value<<endl;
 		}
 
 		for(map<int, map<int, int> >::iterator it = interpreter.memory.begin(); it!=interpreter.memory.end(); it++){
@@ -44,7 +44,9 @@ int main(){
 				cout<<it->first<<" "<<it2->first<<" "<<it2->second<<endl;
 			}
 		}
+		interpreter.printTomasuloTable();
 		cout<<endl;
+		getchar();
 	}
 }
 
