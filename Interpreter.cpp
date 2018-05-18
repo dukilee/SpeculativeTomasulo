@@ -506,27 +506,53 @@ void Interpreter::runCommand(comand c){
 	}
 }
 
+void Interpreter::tryToGetValue(int id, char ch, string address){
+	if(reg[address].dataDependency){
+		if(ch=='j') tomasuloTable[id].qj = reg[address].value;
+		else tomasuloTable[id].qk = reg[address].value;
+	}else{
+		if(ch=='j'){
+			tomasuloTable[id].vj = reg[address].value;
+			tomasuloTable[id].qj = -1;
+		}
+		else{
+			tomasuloTable[id].vk = reg[address].value;
+			tomasuloTable[id].qk = -1;
+		}
+	}
+}
+
+int Interpreter::getNextEmpty(int first, int last){
+	int id = first;
+	while(id<=last && tomasuloTable[id].busy) id++;
+
+	if(id>last) return -1;
+
+	tomasuloTable[id].busy = true;
+	tomasuloTable[id].op = pc-1;
+}
 
 bool Interpreter::runNextLine(){
 	if(pc >= listCommands.size())
-		return false;;
+		return false;
 
 	comand c = listCommands[pc++];
-	runCommand(c);
+	int id;
 
 	switch(c.atrib){
 		case ADD:
-			int id = firstAdds;
-			while(id<=lastAdds && tomasuloTable[firstAdds].busy){
-				id++;
-			}
-			tomasuloTable[id].busy = true;
-			tomasuloTable[id].op = pc-1;
-			tomasuloTable[id].vj = reg[c.p2.address].value;
-			tomasuloTable[id].vk = reg[c.p2.address].value;
+			id = getNextEmpty(firstAdds, lastAdds);
+			tryToGetValue(id, 'j', c.p2.address);
+			tryToGetValue(id, 'k', c.p3.address);
 			
 			break;
+		case LI:
+			id = getNextEmpty(firstLoads, lastLoads);
+			reg[c.p1.address].dataDependency = true;
+			reg[c.p1.address].value = id;
+			break;
 			
+
 	}
 
 	return true;

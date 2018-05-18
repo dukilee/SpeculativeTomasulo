@@ -36,7 +36,7 @@ int main(){
 		i++;
 		cout<<i<<": "<<endl;
 		for(map<string, Reg>::iterator it = interpreter.reg.begin(); it!=interpreter.reg.end(); it++){
-			cout<<it->first<<" "<<it->second.value<<endl;
+			cout<<it->first<<" "<<it->second.value<<" "<<it->second.dataDependency<<endl;
 		}
 
 		for(map<int, map<int, int> >::iterator it = interpreter.memory.begin(); it!=interpreter.memory.end(); it++){

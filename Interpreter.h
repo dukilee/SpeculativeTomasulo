@@ -83,6 +83,8 @@ public:
 	bool runNextLine();
 	void printTomasuloTable();
 	void runCommand(comand c);
+	void tryToGetValue(int id, char ch, string address);
+	int getNextEmpty(int first, int last);
 
 	vector<comand> listCommands;
 	map<string, int> labels;
