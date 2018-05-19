@@ -538,7 +538,7 @@ int Interpreter::getNextEmpty(int first, int last){
 }
 
 bool Interpreter::hasEnded(){
-	if(clock<=1) return true;
+	if(pc<listCommands.size()) return true;
 	for(int i = 0; i<tomasuloTable.size(); i++){
 		if(tomasuloTable[i].busy) return true;
 	}
@@ -594,26 +594,47 @@ bool Interpreter::runNextLine(){
 		return hasEnded();
 
 	comand c = listCommands[pc++];
+	id = -1;
 
 	switch(c.atrib){
 		case ADD:
 			id = getNextEmpty(firstAdds, lastAdds);
+			if(id==-1){
+				pc--;
+				break;
+			}
 			tryToGetValue(id, 'j', c.p2.address);
 			tryToGetValue(id, 'k', c.p3.address);
 			tomasuloTable[id].clockToFinish = timeToFinishAdd;
+			if(tomasuloTable[id].qj==-1 && tomasuloTable[id].qk==-1)
+				tomasuloTable[id].clockToFinish += clock;
 			break;
 		case LI:
 			id = getNextEmpty(firstLoads, lastLoads);
+			if(id==-1){
+				pc--;
+				break;
+			}
 			tomasuloTable[id].vj = c.p2.value;
 			tomasuloTable[id].clockToFinish = clock + timeToFinishLoad;
 			break;
+		case BEQ:
+		case BNE:
+		case BLE:
+			if(reg[c.p1.address].dataDependency || reg[c.p2.address].dataDependency){
+				pc--;
+			}else{
+				runCommand(c, 0, 0);
+			}
+			break;
+			
 			
 
 	}
-	reg[c.p1.address].dataDependency = true;
-	reg[c.p1.address].value = id;
-
-
+	if(id!=-1){
+		reg[c.p1.address].dataDependency = true;
+		reg[c.p1.address].value = id;
+	}
 
 	return hasEnded();
 }

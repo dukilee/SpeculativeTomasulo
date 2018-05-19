@@ -1,5 +1,0 @@
-li r1, 10
-li r2, 10
-add r3, r1, r2
-add r1, r2, r3
-add r3, r1, r1
