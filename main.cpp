@@ -16,9 +16,8 @@
 int main(){
 	char* nomearq;
 	nomearq = (char*) malloc(255*sizeof(char));
-	strcpy(nomearq, "../entrada.txt");
 
-	Interpreter interpreter("../entrada.txt");
+	Interpreter interpreter("../fully.txt");
 
 
 	for(int i = 0; i<interpreter.listCommands.size(); i++){
@@ -41,7 +40,7 @@ int main(){
 
 		for(map<int, map<int, int> >::iterator it = interpreter.memory.begin(); it!=interpreter.memory.end(); it++){
 			for(map<int, int>::iterator it2 = it->second.begin(); it2!=it->second.end(); it2++){
-				cout<<it->first<<" "<<it2->first<<" "<<it2->second<<endl;
+				cout<<"memo: "<<it->first<<" "<<it2->first<<" "<<it2->second<<endl;
 			}
 		}
 		interpreter.printTomasuloTable();
@@ -50,6 +49,11 @@ int main(){
 	}
 	for(map<string, Reg>::iterator it = interpreter.reg.begin(); it!=interpreter.reg.end(); it++){
 		cout<<it->first<<" "<<it->second.value<<" "<<it->second.dataDependency<<endl;
+	}
+	for(map<int, map<int, int> >::iterator it = interpreter.memory.begin(); it!=interpreter.memory.end(); it++){
+		for(map<int, int>::iterator it2 = it->second.begin(); it2!=it->second.end(); it2++){
+			cout<<"memo: "<<it->first<<" "<<it2->first<<" "<<it2->second<<endl;
+		}
 	}
 }
 

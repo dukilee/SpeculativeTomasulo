@@ -1,0 +1,15 @@
+li r1, 10
+li r2, 10
+li r3, 10
+li r4, 60
+add r3, r1, r2
+add r1, r2, r3
+add r3, r1, r1
+beq r3, r2, end
+li r5, 19
+
+
+end:
+li r7, 21
+
+;TODO -> a memoria tbm tem que evitar que os caras errados gravem nela.

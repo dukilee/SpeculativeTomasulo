@@ -166,6 +166,7 @@ void Interpreter::novoAtomo(){
 				estado = 3;
 				break;
 			case ';':
+				cout<<"estou no estado = 5"<<endl;
 				estado = 5;
 				carac = novoCarac();
 				break;
@@ -217,7 +218,7 @@ void Interpreter::novoAtomo(){
 				estado = 3;
 				atom = classificaCadeia(cadeia);
 				carac = novoCarac();
-			}
+			}else carac = novoCarac();
 
 		}
 	}
@@ -429,23 +430,23 @@ void Interpreter::listCmd(){
 	lCaux();
 }
 
+void Interpreter::printaCommand(comand c){
+	cout<<converteTipoPraNome(c.tipo)<<" "<<converteAtribPraNome(c.atrib)<<" "<<c.p1.address<<" "<<c.p2.address<<" "<<c.p3.address<<endl;
+}
+
 int Interpreter::runCommand(comand c, int vj, int vk){
+	cout<<"RUN: ";
+	printaCommand(c);
 	switch(c.atrib){
 		case ADD:
-			return vj + vk;
-			break;
 		case ADDI:
-			reg[c.p1.address].value = reg[c.p2.address].value + c.p3.value;
-			break;
+			return vj + vk;
 		case SUB:
-			reg[c.p1.address].value = reg[c.p2.address].value - reg[c.p3.address].value;
-			break;
+			return vj - vk;
 		case MULT:
-			reg[c.p1.address].value = reg[c.p2.address].value * reg[c.p3.address].value;
-			break;
+			return vj * vk;
 		case DIV:
-			reg[c.p1.address].value = reg[c.p2.address].value / reg[c.p3.address].value;
-			break;
+			return vj / vk;
 		case LI:
 			return vj;
 			break;
@@ -453,8 +454,7 @@ int Interpreter::runCommand(comand c, int vj, int vk){
 			memory[c.p2.value][reg[c.p3.address].value] = reg[c.p1.address].value;
 			break;
 		case LOAD:
-			reg[c.p1.address].value = memory[c.p2.value][reg[c.p3.address].value];
-			break;
+			return memory[vj][vk];
 		case BEQ:
 			if(reg[c.p1.address].value == reg[c.p2.address].value){
 				stk.push(pc);
@@ -547,6 +547,8 @@ bool Interpreter::hasEnded(){
 
 void Interpreter::continueCommand(int id){
 	comand c = listCommands[tomasuloTable[id].op];
+	cout<<"CONTINUE: ";
+	printaCommand(c);
 	int val = runCommand(c, tomasuloTable[id].vj, tomasuloTable[id].vk);
 
 	if(reg[c.p1.address].dataDependency && reg[c.p1.address].value == id){
@@ -594,10 +596,15 @@ bool Interpreter::runNextLine(){
 		return hasEnded();
 
 	comand c = listCommands[pc++];
+	cout<<"LINE: ";
+	printaCommand(c);
 	id = -1;
 
 	switch(c.atrib){
 		case ADD:
+		case SUB:
+		case MULT:
+		case DIV:
 			id = getNextEmpty(firstAdds, lastAdds);
 			if(id==-1){
 				pc--;
@@ -609,6 +616,18 @@ bool Interpreter::runNextLine(){
 			if(tomasuloTable[id].qj==-1 && tomasuloTable[id].qk==-1)
 				tomasuloTable[id].clockToFinish += clock;
 			break;
+		case ADDI:
+			id = getNextEmpty(firstAdds, lastAdds);
+			if(id==-1){
+				pc--;
+				break;
+			}
+			tryToGetValue(id, 'j', c.p2.address);
+			tomasuloTable[id].vk = c.p3.value;
+			tomasuloTable[id].clockToFinish = timeToFinishAdd;
+			if(tomasuloTable[id].qj==-1 && tomasuloTable[id].qk==-1)
+				tomasuloTable[id].clockToFinish += clock;
+			break;
 		case LI:
 			id = getNextEmpty(firstLoads, lastLoads);
 			if(id==-1){
@@ -616,7 +635,38 @@ bool Interpreter::runNextLine(){
 				break;
 			}
 			tomasuloTable[id].vj = c.p2.value;
-			tomasuloTable[id].clockToFinish = clock + timeToFinishLoad;
+			tomasuloTable[id].clockToFinish = timeToFinishLoad;
+			if(tomasuloTable[id].qj==-1 && tomasuloTable[id].qk==-1)
+				tomasuloTable[id].clockToFinish += clock;
+			break;
+		case LOAD:
+			id = getNextEmpty(firstLoads, lastLoads);
+			if(id==-1){
+				pc--;
+				break;
+			}
+
+
+			tomasuloTable[id].vj = c.p2.value;
+			tryToGetValue(id, 'k', c.p3.address);
+			tomasuloTable[id].clockToFinish = timeToFinishLoad;
+			if(tomasuloTable[id].qj==-1 && tomasuloTable[id].qk==-1)
+				tomasuloTable[id].clockToFinish += clock;
+			break;
+		case SAVE:
+			id = getNextEmpty(firstLoads, lastLoads);
+			if(id==-1){
+				pc--;
+				break;
+			}
+
+
+			tomasuloTable[id].vj = c.p2.value;
+			tryToGetValue(id, 'k', c.p3.address);
+			tomasuloTable[id].clockToFinish = timeToFinishLoad;
+			if(tomasuloTable[id].qj==-1 && tomasuloTable[id].qk==-1)
+				tomasuloTable[id].clockToFinish += clock;
+			id = -1;
 			break;
 		case BEQ:
 		case BNE:
@@ -626,6 +676,10 @@ bool Interpreter::runNextLine(){
 			}else{
 				runCommand(c, 0, 0);
 			}
+			break;
+		case RETURN:
+		case GOTO:
+			runCommand(c, 0, 0);
 			break;
 			
 			

@@ -88,6 +88,7 @@ public:
 	int getNextEmpty(int first, int last);
 	bool hasEnded();
 	void continueCommand(int id);
+	void printaCommand(comand c);
 
 	vector<comand> listCommands;
 	map<string, int> labels;
