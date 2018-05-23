@@ -33,7 +33,6 @@ void MainWidget::updateReservationTable(){
 	int row = -1;
 	for(vector<TomasuloTable>::iterator it = interpreter->tomasuloTable.begin(); it!=interpreter->tomasuloTable.end(); it++){
 		row++;
-		cout<<"row = "<<row<<endl;
 
 		reservationTable->item(row, 0)->setText(tr("%1").arg(it->busy));
 		if(it->busy)
@@ -119,8 +118,6 @@ void MainWidget::nextStep(){
 		}
 	}
 	updateReservationTable();
-	interpreter->printTomasuloTable();
-	cout<<endl;
 }
 
 void MainWidget::integrateInstructionTable(){

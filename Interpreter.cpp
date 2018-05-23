@@ -732,6 +732,8 @@ bool Interpreter::runNextLine(){
 		reg[c.p1.address].dataDependency = true;
 		reg[c.p1.address].value = id;
 	}
+	c = listCommands[pc];
+	while(c.tipo != COMANDO) c = listCommands[++pc];
 
 	return hasEnded();
 }
