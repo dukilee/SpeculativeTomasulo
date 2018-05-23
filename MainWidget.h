@@ -5,6 +5,7 @@
 #include <QPushButton>
 #include <QGridLayout>
 #include <QListWidget>
+#include <QTableWidget>
 
 class MainWidget: public QWidget{
 Q_OBJECT
@@ -13,6 +14,7 @@ public:
 	QPushButton* playButton;
 	QGridLayout* layout;
 	QListWidget* list;
+	QTableWidget* table;
 	MainWidget();
 public slots:
 	void nextEntris();
