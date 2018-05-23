@@ -40,6 +40,7 @@ struct comand{
 	int tipo, atrib;
 	param p1, p2, p3;
 	bool jmp;
+	int nParams;
 };
 
 struct TomasuloTable{

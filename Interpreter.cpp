@@ -311,6 +311,7 @@ void Interpreter::comando(){
 			case BLE:
 			case BNE:
 			case BEQ:
+				c.nParams = 3;
 
 				novoAtomo();
 				if(esperado(ID)) break;
@@ -333,6 +334,7 @@ void Interpreter::comando(){
 
 				break;
 			case ADDI:
+				c.nParams = 3;
 				novoAtomo();
 				if(esperado(ID)) break;
 				c.p1.address = atom.atrib.cadeia;
@@ -353,6 +355,7 @@ void Interpreter::comando(){
 				listCommands.push_back(c);
 				break;
 			case LI:
+				c.nParams = 2;
 				novoAtomo();
 				if(esperado(ID)) break;
 				c.p1.address = atom.atrib.cadeia;
@@ -368,6 +371,7 @@ void Interpreter::comando(){
 
 			case LOAD:
 			case SAVE:
+				c.nParams = 2;
 				novoAtomo();
 				if(esperado(ID)) break;
 				c.p1.address = atom.atrib.cadeia;
@@ -392,9 +396,11 @@ void Interpreter::comando(){
 				listCommands.push_back(c);
 				break;
 			case RETURN:
+				c.nParams = 0;
 				listCommands.push_back(c);
 				break;
 			case GOTO:
+				c.nParams = 1;
 				novoAtomo();
 				if(esperado(ID)) break;
 				c.p1.address = atom.atrib.cadeia;
