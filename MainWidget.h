@@ -13,9 +13,15 @@ public:
 	int current;
 	QPushButton* playButton;
 	QGridLayout* layout;
-	QListWidget* list;
-	QTableWidget* table;
+	QTableWidget* instructionTable;
+	QTableWidget* reservationTable;
+	QTableWidget* registerTable;
+
+	QGridLayout* mainLayout;
+
+
 	MainWidget();
+
 public slots:
 	void nextEntris();
 

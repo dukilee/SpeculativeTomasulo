@@ -3,8 +3,11 @@
 
 MainWidget::MainWidget(){
 	current = 0;
-	//list = new QListWidget;
-	table = new QTableWidget;
+
+	instructionTable = new QTableWidget;
+	reservationTable = new QTableWidget;
+	registerTable = new QTableWidget;
+
 	playButton = new QPushButton("Play");
 	connect(playButton, SIGNAL(clicked()), this, SLOT(nextEntris()));
 
@@ -14,32 +17,37 @@ MainWidget::MainWidget(){
 		//list->addItem("terceiro");
 	//}
 
-	table->insertColumn(0);
-	table->insertColumn(1);
+	instructionTable->insertColumn(0);
+	instructionTable->insertColumn(1);
 	for(int i = 0; i<10; i++){
 		QString a = "prim";
 		QString b = "letr";
-		table->insertRow(i);
+		instructionTable->insertRow(i);
 
-		table->setItem(i, 0, new QTableWidgetItem(a));
-		table->setItem(i, 1, new QTableWidgetItem(b));
+		instructionTable->setItem(i, 0, new QTableWidgetItem(a));
+		instructionTable->setItem(i, 1, new QTableWidgetItem(b));
 	}
 
-	QTableWidgetItem* it = table->item(1, 1);
-	QBrush brush(Qt::cyan);
-	it->setBackground(brush);
-
-	
 
 
-	layout = new QGridLayout();
-	layout->addWidget(table, 0, 0);
-	layout->addWidget(playButton, 1, 1);
-	setLayout(layout);
+
+	mainLayout = new QGridLayout();
+	mainLayout->addWidget(instructionTable, 0, 0, 2, 1);
+	mainLayout->addWidget(reservationTable, 0, 1, 1, 2);
+	mainLayout->addWidget(registerTable, 1, 1, 1, 2);
+	mainLayout->addWidget(playButton, 2, 2, Qt::AlignRight);
+	setLayout(mainLayout);
 	nextEntris();
 }
 
 void MainWidget::nextEntris(){
-	//current++;
+	QTableWidgetItem* it = instructionTable->item(current, 1);
+	QBrush brush(Qt::white);
+	it->setBackground(brush);
+	current++;
+	it = instructionTable->item(current, 1);
+	QBrush brush2(Qt::cyan);
+	it->setBackground(brush2);
+
 	//list->setCurrentRow(current);
 }
