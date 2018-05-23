@@ -109,7 +109,17 @@ atomo Interpreter::classificaCadeia(string cadeia){
 			resp.tipo = COMANDO;
 			resp.atrib.atr = GOTO;
 		}else{
-			resp.tipo = ID;
+			bool isMem = (cadeia[0]=='r' || cadeia[0]=='R');
+			for(int i = 1; i<cadeia.length() && isMem; i++){
+				if(!isdigit(cadeia[i])){
+					isMem = false;
+				}
+			}
+			if(isMem){
+				resp.tipo = REG_ID;
+			}else{
+				resp.tipo = ID;
+			}
 		}
 	}else if(isdigit(cadeia[0])){
 		resp.tipo = CTE;
@@ -219,7 +229,6 @@ void Interpreter::novoAtomo(){
 				atom = classificaCadeia(cadeia);
 				carac = novoCarac();
 			}else carac = novoCarac();
-
 		}
 	}
 }
@@ -232,6 +241,7 @@ string Interpreter::converteTipoPraNome(int tipo){
 	string nome;
 	switch(tipo){
 		case ID: nome = "ID"; break;
+		case REG_ID: nome = "REG_ID"; break;
 		case COMANDO: nome = "COMANDO"; break;
 		case VIRG: nome = "VIRG"; break;
 		case DPTS: nome = "DPTS"; break;
@@ -308,20 +318,42 @@ void Interpreter::comando(){
 			case SUB:
 			case MULT:
 			case DIV:
-			case BLE:
-			case BNE:
-			case BEQ:
 				c.nParams = 3;
 
 				novoAtomo();
-				if(esperado(ID)) break;
+				if(esperado(REG_ID)) break;
 				c.p1.address = atom.atrib.cadeia;
 
 				novoAtomo();
 				if(esperado(VIRG)) break;
 
 				novoAtomo();
-				if(esperado(ID)) break;
+				if(esperado(REG_ID)) break;
+				c.p2.address = atom.atrib.cadeia;
+
+				novoAtomo();
+				if(esperado(VIRG)) break;
+
+				novoAtomo();
+				if(esperado(REG_ID)) break;
+				c.p3.address = atom.atrib.cadeia;
+				listCommands.push_back(c);
+
+				break;
+			case BLE:
+			case BNE:
+			case BEQ:
+				c.nParams = 3;
+
+				novoAtomo();
+				if(esperado(REG_ID)) break;
+				c.p1.address = atom.atrib.cadeia;
+
+				novoAtomo();
+				if(esperado(VIRG)) break;
+
+				novoAtomo();
+				if(esperado(REG_ID)) break;
 				c.p2.address = atom.atrib.cadeia;
 
 				novoAtomo();
@@ -336,14 +368,14 @@ void Interpreter::comando(){
 			case ADDI:
 				c.nParams = 3;
 				novoAtomo();
-				if(esperado(ID)) break;
+				if(esperado(REG_ID)) break;
 				c.p1.address = atom.atrib.cadeia;
 
 				novoAtomo();
 				if(esperado(VIRG)) break;
 
 				novoAtomo();
-				if(esperado(ID)) break;
+				if(esperado(REG_ID)) break;
 				c.p2.address = atom.atrib.cadeia;
 
 				novoAtomo();
@@ -357,7 +389,7 @@ void Interpreter::comando(){
 			case LI:
 				c.nParams = 2;
 				novoAtomo();
-				if(esperado(ID)) break;
+				if(esperado(REG_ID)) break;
 				c.p1.address = atom.atrib.cadeia;
 
 				novoAtomo();
@@ -373,7 +405,7 @@ void Interpreter::comando(){
 			case SAVE:
 				c.nParams = 2;
 				novoAtomo();
-				if(esperado(ID)) break;
+				if(esperado(REG_ID)) break;
 				c.p1.address = atom.atrib.cadeia;
 
 				novoAtomo();
@@ -388,7 +420,7 @@ void Interpreter::comando(){
 				if(esperado(ABPAR)) break;
 
 				novoAtomo();
-				if(esperado(ID)) break;
+				if(esperado(REG_ID)) break;
 				c.p3.address = atom.atrib.cadeia;
 
 				novoAtomo();

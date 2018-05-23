@@ -15,11 +15,15 @@ public:
 
 private slots:
 	void nextEntris();
+	void nextStep();
 
 private:
 	void integrateInstructionTable();
+	void integrateRegisterTable();
+	void updateRegister(int, int, int);
 	int current;
 	QPushButton* playButton;
+	QPushButton* stepButton;
 	QGridLayout* layout;
 	QTableWidget* instructionTable;
 	QTableWidget* reservationTable;

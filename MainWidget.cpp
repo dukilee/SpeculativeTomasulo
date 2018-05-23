@@ -1,5 +1,6 @@
 #include <MainWidget.h>
-#include <cstdio>
+
+using namespace std;
 
 MainWidget::MainWidget(){
 	current = 0;
@@ -9,20 +10,73 @@ MainWidget::MainWidget(){
 	reservationTable = new QTableWidget;
 	registerTable = new QTableWidget;
 
-	playButton = new QPushButton("Play");
+	playButton = new QPushButton(tr("&Play"));
+	stepButton = new QPushButton(tr("&Step"));
 	connect(playButton, SIGNAL(clicked()), this, SLOT(nextEntris()));
+	connect(stepButton, SIGNAL(clicked()), this, SLOT(nextStep()));
 
 	integrateInstructionTable();
+	integrateRegisterTable();
 
 
 	mainLayout = new QGridLayout();
 	mainLayout->addWidget(instructionTable, 0, 0, 2, 1);
-	mainLayout->addWidget(reservationTable, 0, 1, 1, 2);
-	mainLayout->addWidget(registerTable, 1, 1, 1, 2);
-	mainLayout->addWidget(playButton, 2, 2, Qt::AlignRight);
+	mainLayout->addWidget(reservationTable, 0, 1, 1, 1);
+	mainLayout->addWidget(registerTable, 1, 1, 2, 1);
+	mainLayout->addWidget(playButton, 2, 0, Qt::AlignRight);
+	mainLayout->addWidget(stepButton, 2, 1, Qt::AlignRight);
 	setLayout(mainLayout);
-	nextEntris();
 }
+
+void MainWidget::updateRegister(int id, int value, int dataDependency){
+	QTableWidgetItem* item = registerTable->item(0, id);
+	QString msg = tr("%1").arg(value);
+
+	if(dataDependency)
+		msg = "#" + msg;
+
+	if(item == NULL) {
+		item = new QTableWidgetItem(msg);
+		registerTable->setItem(0, id, item);
+	}else{
+		item->setText(msg);
+	}
+}
+
+void MainWidget::nextStep(){
+	nextEntris();
+	if(!interpreter->runNextLine())
+		return;
+
+	int id;
+	for(map<string, Reg>::iterator it = interpreter->reg.begin(); it!=interpreter->reg.end(); it++){
+		id = atoi(it->first.substr(1).c_str());
+		updateRegister(id, it->second.value, it->second.dataDependency);
+	}
+
+
+
+
+	for(map<int, map<int, int> >::iterator it = interpreter->memory.begin(); it!=interpreter->memory.end(); it++){
+		for(map<int, int>::iterator it2 = it->second.begin(); it2!=it->second.end(); it2++){
+			cout<<"memo: "<<it->first<<" "<<it2->first<<" "<<it2->second<<endl;
+		}
+	}
+	interpreter->printTomasuloTable();
+	cout<<endl;
+}
+/*
+	for(map<string, Reg>::iterator it = interpreter.reg.begin(); it!=interpreter.reg.end(); it++){
+		cout<<it->first<<" "<<it->second.value<<" "<<it->second.dataDependency<<endl;
+	}
+	for(map<int, map<int, int> >::iterator it = interpreter.memory.begin(); it!=interpreter.memory.end(); it++){
+		for(map<int, int>::iterator it2 = it->second.begin(); it2!=it->second.end(); it2++){
+			cout<<"memo: "<<it->first<<" "<<it2->first<<" "<<it2->second<<endl;
+		}
+	}
+}
+
+*/
 
 
 void MainWidget::integrateInstructionTable(){
@@ -56,48 +110,25 @@ void MainWidget::integrateInstructionTable(){
 
 	}
 }
-/*
-int main(){
 
-	for(map<string, int>::iterator it = interpreter.labels.begin(); it!=interpreter.labels.end(); it++){
-		cout<<it->first<<" "<<it->second<<endl;
+void MainWidget::integrateRegisterTable(){
+	QStringList sList;
+	for(int i = 0; i<2; i++){
+		registerTable->insertRow(i);
 	}
+	for(int i = 0; i<11; i++){
+		registerTable->insertColumn(i);
+		sList << tr("R%1").arg(i);
+	}
+	registerTable->setHorizontalHeaderLabels(sList);
 
-	int i = 0;
-	while(	interpreter.runNextLine()){
-		i++;
-		cout<<i<<": "<<endl;
-		for(map<string, Reg>::iterator it = interpreter.reg.begin(); it!=interpreter.reg.end(); it++){
-			cout<<it->first<<" "<<it->second.value<<" "<<it->second.dataDependency<<endl;
-		}
-
-		for(map<int, map<int, int> >::iterator it = interpreter.memory.begin(); it!=interpreter.memory.end(); it++){
-			for(map<int, int>::iterator it2 = it->second.begin(); it2!=it->second.end(); it2++){
-				cout<<"memo: "<<it->first<<" "<<it2->first<<" "<<it2->second<<endl;
-			}
-		}
-		interpreter.printTomasuloTable();
-		cout<<endl;
-		getchar();
-	}
-	for(map<string, Reg>::iterator it = interpreter.reg.begin(); it!=interpreter.reg.end(); it++){
-		cout<<it->first<<" "<<it->second.value<<" "<<it->second.dataDependency<<endl;
-	}
-	for(map<int, map<int, int> >::iterator it = interpreter.memory.begin(); it!=interpreter.memory.end(); it++){
-		for(map<int, int>::iterator it2 = it->second.begin(); it2!=it->second.end(); it2++){
-			cout<<"memo: "<<it->first<<" "<<it2->first<<" "<<it2->second<<endl;
-		}
-	}
 }
-
-*/
 
 void MainWidget::nextEntris(){
 	QBrush brushWhite(Qt::white);
 	QBrush brushColor(Qt::cyan);
 	QTableWidgetItem* it;
 	for(int i = 0; i<instructionTable->columnCount(); i++){
-		cout<<"current = "<<current<<"\ti = "<<i<<endl;
 		it = instructionTable->item(current-1, i);
 		if(it!=NULL)
 			it->setBackground(brushWhite);
