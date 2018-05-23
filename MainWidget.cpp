@@ -3,7 +3,7 @@
 using namespace std;
 
 MainWidget::MainWidget(){
-	current = 0;
+	lastRow = -1;
 	interpreter = new Interpreter("../fully.txt");
 
 	instructionTable = new QTableWidget;
@@ -12,6 +12,7 @@ MainWidget::MainWidget(){
 
 	playButton = new QPushButton(tr("&Play"));
 	stepButton = new QPushButton(tr("&Step"));
+	clockLbl = new QLabel("0");
 	connect(playButton, SIGNAL(clicked()), this, SLOT(nextEntris()));
 	connect(stepButton, SIGNAL(clicked()), this, SLOT(nextStep()));
 
@@ -19,12 +20,12 @@ MainWidget::MainWidget(){
 	integrateRegisterTable();
 	integrateReservationTable();
 
-
 	mainLayout = new QGridLayout();
 	mainLayout->addWidget(instructionTable, 0, 0, 2, 1);
 	mainLayout->addWidget(reservationTable, 0, 1, 1, 1);
 	mainLayout->addWidget(registerTable, 1, 1, 2, 1);
-	mainLayout->addWidget(playButton, 2, 0, Qt::AlignRight);
+	//mainLayout->addWidget(playButton, 2, 0, Qt::AlignRight);
+	mainLayout->addWidget(clockLbl, 2, 0, Qt::AlignLeft);
 	mainLayout->addWidget(stepButton, 2, 1, Qt::AlignRight);
 	setLayout(mainLayout);
 }
@@ -38,16 +39,16 @@ void MainWidget::updateReservationTable(){
 		if(it->busy)
 			reservationTable->item(row, 1)->setText(tr("%1").arg(it->op));
 		else
-			reservationTable->item(row, 4)->setText("");
+			reservationTable->item(row, 1)->setText("");
 
-		if(it->busy)
+		if(it->qj<0 && it->busy)
 			reservationTable->item(row, 2)->setText(tr("%1").arg(it->vj));
 		else
-			reservationTable->item(row, 4)->setText("");
-		if(it->busy)
+			reservationTable->item(row, 2)->setText("");
+		if(it->qk<0 && it->busy)
 			reservationTable->item(row, 3)->setText(tr("%1").arg(it->vk));
 		else
-			reservationTable->item(row, 4)->setText("");
+			reservationTable->item(row, 3)->setText("");
 		if(it->qj>=0 && it->busy)
 			reservationTable->item(row, 4)->setText(tr("%1").arg(it->qj));
 		else
@@ -61,7 +62,7 @@ void MainWidget::updateReservationTable(){
 		if(it->busy)
 			reservationTable->item(row, 6)->setText(tr("%1").arg(it->d));
 		else
-			reservationTable->item(row, 4)->setText("");
+			reservationTable->item(row, 6)->setText("");
 	}
 }
 
@@ -118,6 +119,10 @@ void MainWidget::nextStep(){
 		}
 	}
 	updateReservationTable();
+	paintReservationTable(Qt::yellow, interpreter->emptyPos);
+
+
+	clockLbl->setText(tr("%1").arg(interpreter->clock));
 }
 
 void MainWidget::integrateInstructionTable(){
@@ -166,6 +171,22 @@ void MainWidget::integrateRegisterTable(){
 	}
 	registerTable->setHorizontalHeaderLabels(sList);
 
+}
+
+void MainWidget::paintReservationTable(QColor color, int row){
+	QBrush brushWhite(Qt::white);
+	QBrush brushColor(color);
+	QTableWidgetItem* it;
+	int pc = interpreter->pc;
+	for(int i = 0; i<reservationTable->columnCount(); i++){
+		it = reservationTable->item(lastRow, i);
+		if(it!=NULL)
+			it->setBackground(brushWhite);
+		it = reservationTable->item(row, i);
+		if(it!=NULL)
+			it->setBackground(brushColor);
+	}
+	lastRow = row;
 }
 
 void MainWidget::nextEntris(){

@@ -101,6 +101,8 @@ public:
 	
 	stack<int> stk;
 
+	int emptyPos;
+
 	int numLoads;
 	int numAdds;
 	int numMults;

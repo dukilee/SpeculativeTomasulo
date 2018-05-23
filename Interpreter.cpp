@@ -12,6 +12,7 @@ Interpreter::Interpreter(string nomearq){
 	pc = 0;
 	linha = 1;
 	clock = 0;
+	emptyPos = -1;
 
 	programa = fopen(nomearq.c_str(), "r");
 
@@ -576,6 +577,7 @@ int Interpreter::getNextEmpty(int first, int last){
 	tomasuloTable[id].qj = -1;
 	tomasuloTable[id].qk = -1;
 	cout<<id<<" "<<tomasuloTable[id].busy<<endl;
+	emptyPos = id;
 	return id;
 }
 
@@ -633,14 +635,13 @@ bool Interpreter::runNextLine(){
 			break;
 		}
 	}
+	emptyPos = -1;
 
 	if(pc >= listCommands.size())
 		return hasEnded();
 
 	comand c = listCommands[pc++];
 	while(c.tipo != COMANDO) c = listCommands[pc++];
-	cout<<"LINE: ";
-	printaCommand(c);
 	id = -1;
 
 	switch(c.atrib){
@@ -673,6 +674,7 @@ bool Interpreter::runNextLine(){
 			break;
 		case LI:
 			id = getNextEmpty(firstLoads, lastLoads);
+			cout<<"id = "<<id<<endl;
 			if(id==-1){
 				pc--;
 				break;
@@ -732,8 +734,11 @@ bool Interpreter::runNextLine(){
 		reg[c.p1.address].dataDependency = true;
 		reg[c.p1.address].value = id;
 	}
-	c = listCommands[pc];
-	while(c.tipo != COMANDO) c = listCommands[++pc];
+	if(pc<listCommands.size()){
+		c = listCommands[pc];
+		while(c.tipo != COMANDO && pc+1<listCommands.size()) c = listCommands[++pc];
+	}
+
 
 	return hasEnded();
 }

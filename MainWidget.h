@@ -7,6 +7,7 @@
 #include <QListWidget>
 #include <QTableWidget>
 #include <Interpreter.h>
+#include <QLabel>
 
 class MainWidget: public QWidget{
 Q_OBJECT
@@ -23,9 +24,12 @@ private:
 	void integrateReservationTable();
 	void updateReservationTable();
 	void updateRegister(int, int, int);
+	void paintReservationTable(QColor, int);
 	int current;
+	int lastRow;
 	QPushButton* playButton;
 	QPushButton* stepButton;
+	QLabel* clockLbl;
 	QGridLayout* layout;
 	QTableWidget* instructionTable;
 	QTableWidget* reservationTable;
