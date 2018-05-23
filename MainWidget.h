@@ -20,6 +20,8 @@ private slots:
 private:
 	void integrateInstructionTable();
 	void integrateRegisterTable();
+	void integrateReservationTable();
+	void updateReservationTable();
 	void updateRegister(int, int, int);
 	int current;
 	QPushButton* playButton;

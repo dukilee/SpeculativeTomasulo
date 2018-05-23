@@ -271,8 +271,8 @@ string Interpreter::converteAtribPraNome(int atrib){
 		case BEQ: nome = "BEQ"; break;
 		case BNE: nome = "BNE"; break;
 		case LI: nome = "LI"; break;
-		case RETURN: nome = "return"; break;
-		case GOTO: nome = "nome"; break;
+		case RETURN: nome = "RETURN"; break;
+		case GOTO: nome = "GOTO"; break;
 		default: nome = "UNDEFINED"; break;
 	}
 	return nome;
@@ -444,6 +444,10 @@ void Interpreter::comando(){
 		novoAtomo();
 		if(esperado(DPTS)) return;
 		labels[labelName] = listCommands.size();
+
+		c.nParams = 0;
+		c.p1.address = labelName+":";
+		listCommands.push_back(c);
 	}else{
 		naoEsperado(atom.tipo);
 	}
@@ -634,6 +638,7 @@ bool Interpreter::runNextLine(){
 		return hasEnded();
 
 	comand c = listCommands[pc++];
+	while(c.tipo != COMANDO) c = listCommands[pc++];
 	cout<<"LINE: ";
 	printaCommand(c);
 	id = -1;
