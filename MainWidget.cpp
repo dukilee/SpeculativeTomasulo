@@ -115,7 +115,6 @@ void MainWidget::nextStep(){
 
 	for(map<int, map<int, int> >::iterator it = interpreter->memory.begin(); it!=interpreter->memory.end(); it++){
 		for(map<int, int>::iterator it2 = it->second.begin(); it2!=it->second.end(); it2++){
-			cout<<"memo: "<<it->first<<" "<<it2->first<<" "<<it2->second<<endl;
 		}
 	}
 	updateReservationTable();
@@ -123,6 +122,7 @@ void MainWidget::nextStep(){
 
 
 	clockLbl->setText(tr("%1").arg(interpreter->clock));
+	update();
 }
 
 void MainWidget::integrateInstructionTable(){

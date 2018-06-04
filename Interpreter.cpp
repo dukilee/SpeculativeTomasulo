@@ -177,7 +177,6 @@ void Interpreter::novoAtomo(){
 				estado = 3;
 				break;
 			case ';':
-				cout<<"estou no estado = 5"<<endl;
 				estado = 5;
 				carac = novoCarac();
 				break;
@@ -478,8 +477,8 @@ void Interpreter::printaCommand(comand c){
 }
 
 int Interpreter::runCommand(comand c, int vj, int vk){
-	cout<<"RUN: ";
-	printaCommand(c);
+	//cout<<"RUN: ";
+	//printaCommand(c);
 	switch(c.atrib){
 		case ADD:
 		case ADDI:
@@ -576,7 +575,6 @@ int Interpreter::getNextEmpty(int first, int last){
 	tomasuloTable[id].op = pc-1;
 	tomasuloTable[id].qj = -1;
 	tomasuloTable[id].qk = -1;
-	cout<<id<<" "<<tomasuloTable[id].busy<<endl;
 	emptyPos = id;
 	return id;
 }
@@ -591,8 +589,8 @@ bool Interpreter::hasEnded(){
 
 void Interpreter::continueCommand(int id){
 	comand c = listCommands[tomasuloTable[id].op];
-	cout<<"CONTINUE: ";
-	printaCommand(c);
+	//cout<<"CONTINUE: ";
+	//printaCommand(c);
 	int val = runCommand(c, tomasuloTable[id].vj, tomasuloTable[id].vk);
 
 	if(reg[c.p1.address].dataDependency && reg[c.p1.address].value == id){
@@ -674,7 +672,6 @@ bool Interpreter::runNextLine(){
 			break;
 		case LI:
 			id = getNextEmpty(firstLoads, lastLoads);
-			cout<<"id = "<<id<<endl;
 			if(id==-1){
 				pc--;
 				break;
