@@ -528,10 +528,8 @@ int Interpreter::runCommand(comand c, int vj, int vk){
 			return vj / vk;
 		case LI:
 			return vj;
-			break;
 		case SAVE:
-			return reg[c.p1.address].value;
-			break;
+			return vj;
 		case LOAD:
 			return memory[vj][vk].value;
 		case BEQ:
@@ -785,8 +783,7 @@ bool Interpreter::runNextLine(){
 				break;
 			}
 
-
-			tomasuloTable[id].vj = c.p2.value;
+			tryToGetValue(id, 'j', c.p1.address);
 			tryToGetValue(id, 'k', c.p3.address);
 			tomasuloTable[id].clockToFinish = timeToFinishLoad;
 			if(tomasuloTable[id].qj==-1 && tomasuloTable[id].qk==-1)
@@ -813,6 +810,7 @@ bool Interpreter::runNextLine(){
 		switch(c.atrib){
 			case SAVE:
 				memory[c.p2.value][reg[c.p3.address].value].dataDependency = true;
+				memory[c.p2.value][reg[c.p3.address].value].value = id;
 			break;
 			default:
 				reg[c.p1.address].dataDependency = true;
