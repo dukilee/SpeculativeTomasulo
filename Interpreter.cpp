@@ -13,6 +13,7 @@ Interpreter::Interpreter(string nomearq){
 	linha = 1;
 	clock = 0;
 	emptyPos = -1;
+	runnedCommands=0;
 
 	programa = fopen(nomearq.c_str(), "r");
 
@@ -477,6 +478,7 @@ void Interpreter::printaCommand(comand c){
 }
 
 int Interpreter::runCommand(comand c, int vj, int vk){
+	runnedCommands++;
 	//cout<<"RUN: ";
 	//printaCommand(c);
 	switch(c.atrib){

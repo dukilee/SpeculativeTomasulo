@@ -22,6 +22,9 @@ private:
 	void integrateInstructionTable();
 	void integrateRegisterTable();
 	void integrateReservationTable();
+	void integrateDataTable();
+	void updateMemoryTable();
+	void updateDataTable();
 	void updateReservationTable();
 	void updateRegister(int, int, int);
 	void paintReservationTable(QColor, int);
@@ -29,11 +32,12 @@ private:
 	int lastRow;
 	QPushButton* playButton;
 	QPushButton* stepButton;
-	QLabel* clockLbl;
 	QGridLayout* layout;
 	QTableWidget* instructionTable;
 	QTableWidget* reservationTable;
 	QTableWidget* registerTable;
+	QTableWidget* dataTable;
+	QTableWidget* memoryTable;
 	Interpreter* interpreter;
 
 	QGridLayout* mainLayout;

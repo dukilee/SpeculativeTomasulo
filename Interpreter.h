@@ -114,6 +114,7 @@ public:
 	int timeToFinishLoad;
 	int timeToFinishMult;
 	int timeToFinishAdd;
+	int runnedCommands;
 };
 
 #endif

@@ -9,25 +9,60 @@ MainWidget::MainWidget(){
 	instructionTable = new QTableWidget;
 	reservationTable = new QTableWidget;
 	registerTable = new QTableWidget;
+	dataTable = new QTableWidget;
+	memoryTable = new QTableWidget;
 
 	playButton = new QPushButton(tr("&Play"));
 	stepButton = new QPushButton(tr("&Step"));
-	clockLbl = new QLabel("0");
 	connect(playButton, SIGNAL(clicked()), this, SLOT(nextEntris()));
 	connect(stepButton, SIGNAL(clicked()), this, SLOT(nextStep()));
 
 	integrateInstructionTable();
 	integrateRegisterTable();
 	integrateReservationTable();
+	integrateDataTable();
+
+	QStringList sList;
+	sList<<"Memory";
+	memoryTable->insertRow(0);
+	memoryTable->setVerticalHeaderLabels(sList);
 
 	mainLayout = new QGridLayout();
-	mainLayout->addWidget(instructionTable, 0, 0, 2, 1);
+	mainLayout->addWidget(instructionTable, 0, 0, 3, 2);
+	mainLayout->addWidget(dataTable, 3, 0, 2, 1);
 	mainLayout->addWidget(reservationTable, 0, 1, 1, 1);
-	mainLayout->addWidget(registerTable, 1, 1, 2, 1);
+	mainLayout->addWidget(registerTable, 2, 1, 1, 1);
+	mainLayout->addWidget(memoryTable, 3, 1, 1, 1);
 	//mainLayout->addWidget(playButton, 2, 0, Qt::AlignRight);
-	mainLayout->addWidget(clockLbl, 2, 0, Qt::AlignLeft);
-	mainLayout->addWidget(stepButton, 2, 1, Qt::AlignRight);
+	mainLayout->addWidget(stepButton, 5, 1, Qt::AlignRight);
 	setLayout(mainLayout);
+}
+
+void MainWidget::updateMemoryTable(){
+	QStringList sList;
+	int cont = 0;
+	
+	for(map<int, map<int, int> >::iterator it = interpreter->memory.begin(); it!=interpreter->memory.end();it++){
+
+		for(map<int, int>::iterator it2 = it->second.begin(); it2!=it->second.end(); it2++){
+
+			sList << tr("%1(").arg(it->first)+tr("%1)").arg(it2->first);
+			QTableWidgetItem* item = memoryTable->item(0, cont);
+
+
+			if(item == NULL) {
+				item = new QTableWidgetItem(tr("%1").arg(it2->second));
+				memoryTable->insertColumn(cont);
+				memoryTable->setItem(0, cont, item);
+
+			}else{
+				item->setText(tr("%1").arg(it2->second));
+			}
+			cont++;
+		}
+	}
+	if(cont>0)
+		memoryTable->setHorizontalHeaderLabels(sList);
 }
 
 void MainWidget::updateReservationTable(){
@@ -86,6 +121,17 @@ void MainWidget::integrateReservationTable(){
 	reservationTable->setVerticalHeaderLabels(sListVer);
 }
 
+void MainWidget::integrateDataTable(){
+	QStringList sList;
+	sList<<"Clock"<<"CLI"<<"PC"<<"Instructions";
+	dataTable->insertColumn(0);
+	for(int i = 0; i<4; i++){
+		dataTable->insertRow(i);
+		dataTable->setItem(i, 0, new QTableWidgetItem("0"));
+	}
+	dataTable->setVerticalHeaderLabels(sList);
+}
+
 void MainWidget::updateRegister(int id, int value, int dataDependency){
 	QTableWidgetItem* item = registerTable->item(0, id);
 	QString msg = tr("%1").arg(value);
@@ -121,8 +167,18 @@ void MainWidget::nextStep(){
 	paintReservationTable(Qt::yellow, interpreter->emptyPos);
 
 
-	clockLbl->setText(tr("%1").arg(interpreter->clock));
+	updateDataTable();
+	updateMemoryTable();
+
+
 	update();
+}
+
+void MainWidget::updateDataTable(){
+	dataTable->item(0, 0)->setText(tr("%1").arg(interpreter->clock));
+	dataTable->item(1, 0)->setText(tr("%1").arg(interpreter->runnedCommands/1.0/interpreter->clock));
+	dataTable->item(2, 0)->setText(tr("%1").arg(current+1));
+	dataTable->item(3, 0)->setText(tr("%1").arg(interpreter->runnedCommands));
 }
 
 void MainWidget::integrateInstructionTable(){
