@@ -28,6 +28,7 @@ private:
 	void updateReservationTable();
 	void updateRegister(int, int, int);
 	void paintReservationTable(QColor, int);
+	void setToRunning(int, int);
 	int current;
 	int lastRow;
 	QPushButton* playButton;

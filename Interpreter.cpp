@@ -53,6 +53,19 @@ Interpreter::Interpreter(string nomearq){
 	}
 }
 
+pair<int, int> Interpreter::findInterval(int x){
+	if(x>=firstLoads  && x<=lastLoads){
+		return pair<int, int>(firstLoads, lastLoads);
+	}
+	if(x>=firstAdds  && x<=lastAdds){
+		return pair<int, int>(firstAdds, lastAdds);
+	}
+	if(x>=firstMults  && x<=lastMults){
+		return pair<int, int>(firstMults, lastMults);
+	}
+	return pair<int, int>(1, 0);
+}
+
 //FUNCTIONS
 char Interpreter::novoCarac(){
 	char caracLido = 0;
@@ -78,7 +91,7 @@ atomo Interpreter::classificaCadeia(string cadeia){
 		}else if(cadeia == "sub"){
 			resp.tipo = COMANDO;
 			resp.atrib.atr = SUB;
-		}else if(cadeia == "mult"){
+		}else if(cadeia == "mul"){
 			resp.tipo = COMANDO;
 			resp.atrib.atr = MULT;
 		}else if(cadeia == "div"){
@@ -264,7 +277,7 @@ string Interpreter::converteAtribPraNome(int atrib){
 		case 0: nome = ""; break;
 		case ADD: nome = "ADD"; break;
 		case SUB: nome = "SUB"; break;
-		case MULT: nome = "MULT"; break;
+		case MULT: nome = "MUL"; break;
 		case DIV: nome = "DIV"; break;
 		case SAVE: nome = "SW"; break;
 		case LOAD: nome = "LOAD"; break;
@@ -631,11 +644,24 @@ void Interpreter::continueCommand(int id){
 		}
 
 		if(changed && tomasuloTable[i].qk == -1 && tomasuloTable[i].qj == -1){
-			tomasuloTable[i].clockToFinish += clock;
+			tomasuloTable[i].clockToFinish += timeToFree(i);
 		}
 	}
 	tomasuloTable[id].busy = false;
 	
+}
+
+int Interpreter::timeToFree(int x){
+	pair<int, int> interval = findInterval(x);
+	int minimum = clock;
+	for(int j = interval.first; j<=interval.second; j++){
+		if(j==x) continue;
+		if(!tomasuloTable[j].busy) continue;
+		minimum = max(minimum, tomasuloTable[j].clockToFinish);
+	}
+
+	return minimum;
+
 }
 
 bool Interpreter::runNextLine(){
@@ -663,7 +689,11 @@ bool Interpreter::runNextLine(){
 		case SUB:
 		case MULT:
 		case DIV:
-			id = getNextEmpty(firstAdds, lastAdds);
+			if(c.atrib==MULT || c.atrib==DIV)
+				id = getNextEmpty(firstMults, lastMults);
+			else
+				id = getNextEmpty(firstAdds, lastAdds);
+
 			if(id==-1){
 				pc--;
 				break;
@@ -675,15 +705,18 @@ bool Interpreter::runNextLine(){
 				case SUB:
 				case ADD:
 					timeToFinish = timeToFinishAdd;
+					break;
 				case MULT:
 					timeToFinish = timeToFinishMult;
+					break;
 				case DIV:
 					timeToFinish = timeToFinishDiv;
+					break;
 					
 			}
 			tomasuloTable[id].clockToFinish = timeToFinish;
 			if(tomasuloTable[id].qj==-1 && tomasuloTable[id].qk==-1)
-				tomasuloTable[id].clockToFinish += clock;
+				tomasuloTable[id].clockToFinish += timeToFree(id);
 			break;
 		case ADDI:
 			id = getNextEmpty(firstAdds, lastAdds);
@@ -695,7 +728,7 @@ bool Interpreter::runNextLine(){
 			tomasuloTable[id].vk = c.p3.value;
 			tomasuloTable[id].clockToFinish = timeToFinishAdd;
 			if(tomasuloTable[id].qj==-1 && tomasuloTable[id].qk==-1)
-				tomasuloTable[id].clockToFinish += clock;
+				tomasuloTable[id].clockToFinish += timeToFree(id);
 			break;
 		case LI:
 			id = getNextEmpty(firstLoads, lastLoads);
@@ -706,7 +739,7 @@ bool Interpreter::runNextLine(){
 			tomasuloTable[id].vj = c.p2.value;
 			tomasuloTable[id].clockToFinish = timeToFinishLoad;
 			if(tomasuloTable[id].qj==-1 && tomasuloTable[id].qk==-1)
-				tomasuloTable[id].clockToFinish += clock;
+				tomasuloTable[id].clockToFinish += timeToFree(id);
 			break;
 		case LOAD:
 			id = getNextEmpty(firstLoads, lastLoads);
@@ -720,7 +753,7 @@ bool Interpreter::runNextLine(){
 			tryToGetValue(id, 'k', c.p3.address);
 			tomasuloTable[id].clockToFinish = timeToFinishLoad;
 			if(tomasuloTable[id].qj==-1 && tomasuloTable[id].qk==-1)
-				tomasuloTable[id].clockToFinish += clock;
+				tomasuloTable[id].clockToFinish += timeToFree(id);
 			break;
 		case SAVE:
 			id = getNextEmpty(firstLoads, lastLoads);
@@ -734,7 +767,7 @@ bool Interpreter::runNextLine(){
 			tryToGetValue(id, 'k', c.p3.address);
 			tomasuloTable[id].clockToFinish = timeToFinishLoad;
 			if(tomasuloTable[id].qj==-1 && tomasuloTable[id].qk==-1)
-				tomasuloTable[id].clockToFinish += clock;
+				tomasuloTable[id].clockToFinish += timeToFree(id);
 			id = -1;
 			break;
 		case BEQ:
@@ -762,7 +795,6 @@ bool Interpreter::runNextLine(){
 		c = listCommands[pc];
 		while(c.tipo != COMANDO && pc+1<listCommands.size()) c = listCommands[++pc];
 	}
-
 
 	return hasEnded();
 }

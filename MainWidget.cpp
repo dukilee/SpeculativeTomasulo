@@ -73,38 +73,59 @@ void MainWidget::updateReservationTable(){
 		reservationTable->item(row, 0)->setText(tr("%1").arg(it->busy));
 		if(it->busy)
 			reservationTable->item(row, 1)->setText(QString::fromStdString(interpreter->converteAtribPraNome(interpreter->listCommands[it->op].atrib)));
-		else
-			reservationTable->item(row, 1)->setText("");
 
 		if(it->qj<0 && it->busy)
-			reservationTable->item(row, 2)->setText(tr("%1").arg(it->vj));
-		else
-			reservationTable->item(row, 2)->setText("");
-		if(it->qk<0 && it->busy)
-			reservationTable->item(row, 3)->setText(tr("%1").arg(it->vk));
-		else
+			reservationTable->item(row, 3)->setText(tr("%1").arg(it->vj));
+		else if(it->busy)
 			reservationTable->item(row, 3)->setText("");
-		if(it->qj>=0 && it->busy)
-			reservationTable->item(row, 4)->setText(tr("%1").arg(it->qj+1));
-		else
+		if(it->qk<0 && it->busy)
+			reservationTable->item(row, 4)->setText(tr("%1").arg(it->vk));
+		else if(it->busy)
 			reservationTable->item(row, 4)->setText("");
 
-		if(it->qk>=0 && it->busy)
-			reservationTable->item(row, 5)->setText(tr("%1").arg(it->qk+1));
-		else
-			reservationTable->item(row, 5)->setText("");
+		if(it->busy)
+			reservationTable->item(row, 5)->setText(tr("%1").arg(it->qj+1));
 
 		if(it->busy)
-			reservationTable->item(row, 6)->setText(QString::fromStdString(interpreter->listCommands[it->op].d));
-		else
-			reservationTable->item(row, 6)->setText("");
+			reservationTable->item(row, 6)->setText(tr("%1").arg(it->qk+1));
+
+		if(it->busy)
+			reservationTable->item(row, 7)->setText(QString::fromStdString(interpreter->listCommands[it->op].d));
+
+
+
+		if(!it->busy && reservationTable->item(row, 2)->text()!="")
+			reservationTable->item(row, 2)->setText("Recorded");
+		if(it->busy){
+			reservationTable->item(row, 2)->setText("Emited");
+		}
 	}
+	setToRunning(interpreter->firstLoads, interpreter->lastLoads);
+	setToRunning(interpreter->firstAdds, interpreter->lastAdds);
+	setToRunning(interpreter->firstMults, interpreter->lastMults);
+}
+
+void MainWidget::setToRunning(int start, int finish){
+	int min, id;
+	min = 9999999;
+	id = -1;
+	for(int i = start; i<=finish; i++){
+		if(!interpreter->tomasuloTable[i].busy || interpreter->tomasuloTable[i].qk>=0 || interpreter->tomasuloTable[i].qj>=0) continue;
+		if(interpreter->tomasuloTable[i].clockToFinish<min){
+			min = interpreter->tomasuloTable[i].clockToFinish;
+			id = i;
+		}
+	}
+	if(id>=0){
+		reservationTable->item(id, 2)->setText("Running");
+	}
+
 }
 
 void MainWidget::integrateReservationTable(){
 	QStringList sListHor, sListVer;
-	sListHor<<"busy"<<"op"<<"vj"<<"vk"<<"qj"<<"qk"<<"a";
-	for(int i = 0; i<7; i++){
+	sListHor<<"busy"<<"op"<<"state"<<"vj"<<"vk"<<"qj"<<"qk"<<"a";
+	for(int i = 0; i<8; i++){
 		reservationTable->insertColumn(i);
 	}
 	reservationTable->setHorizontalHeaderLabels(sListHor);
@@ -113,7 +134,7 @@ void MainWidget::integrateReservationTable(){
 		reservationTable->insertRow(row);
 		sListVer<<QString::fromStdString(it->name);
 
-		for(int i = 0; i<7; i++){
+		for(int i = 0; i<8; i++){
 			reservationTable->setItem(row, i, new QTableWidgetItem(""));
 
 		}
@@ -149,8 +170,10 @@ void MainWidget::updateRegister(int id, int value, int dataDependency){
 
 void MainWidget::nextStep(){
 	nextEntris();
-	if(!interpreter->runNextLine())
-		return;
+	if(!interpreter->runNextLine()){}
+
+
+		//return;
 
 	int id;
 	for(map<string, Reg>::iterator it = interpreter->reg.begin(); it!=interpreter->reg.end(); it++){

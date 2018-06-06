@@ -91,6 +91,8 @@ public:
 	bool hasEnded();
 	void continueCommand(int id);
 	void printaCommand(comand c);
+	int timeToFree(int x);
+	pair<int, int> findInterval(int x);
 
 	vector<comand> listCommands;
 	map<string, int> labels;
