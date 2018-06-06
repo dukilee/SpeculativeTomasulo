@@ -12,9 +12,9 @@ MainWidget::MainWidget(){
 	dataTable = new QTableWidget;
 	memoryTable = new QTableWidget;
 
-	playButton = new QPushButton(tr("&Play"));
+	playButton = new QPushButton(tr("&Run to end"));
 	stepButton = new QPushButton(tr("&Step"));
-	connect(playButton, SIGNAL(clicked()), this, SLOT(nextEntris()));
+	connect(playButton, SIGNAL(clicked()), this, SLOT(playButtonClicked()));
 	connect(stepButton, SIGNAL(clicked()), this, SLOT(nextStep()));
 
 	integrateInstructionTable();
@@ -33,30 +33,48 @@ MainWidget::MainWidget(){
 	mainLayout->addWidget(reservationTable, 0, 1, 1, 1);
 	mainLayout->addWidget(registerTable, 2, 1, 1, 1);
 	mainLayout->addWidget(memoryTable, 3, 1, 1, 1);
-	//mainLayout->addWidget(playButton, 2, 0, Qt::AlignRight);
+	mainLayout->addWidget(playButton, 5, 0, Qt::AlignLeft);
 	mainLayout->addWidget(stepButton, 5, 1, Qt::AlignRight);
 	setLayout(mainLayout);
+	isRunning = false;
+}
+
+void MainWidget::playButtonClicked(){
+	isRunning = !isRunning;
+	runToEnd();
+}
+
+void MainWidget::runToEnd(){
+	while(isRunning && !interpreter->hasEnded()){
+		nextStep();
+	}
 }
 
 void MainWidget::updateMemoryTable(){
 	QStringList sList;
 	int cont = 0;
 	
-	for(map<int, map<int, int> >::iterator it = interpreter->memory.begin(); it!=interpreter->memory.end();it++){
+	for(map<int, map<int, Reg> >::iterator it = interpreter->memory.begin(); it!=interpreter->memory.end();it++){
 
-		for(map<int, int>::iterator it2 = it->second.begin(); it2!=it->second.end(); it2++){
+		for(map<int, Reg>::iterator it2 = it->second.begin(); it2!=it->second.end(); it2++){
 
 			sList << tr("%1(").arg(it->first)+tr("%1)").arg(it2->first);
 			QTableWidgetItem* item = memoryTable->item(0, cont);
 
 
 			if(item == NULL) {
-				item = new QTableWidgetItem(tr("%1").arg(it2->second));
+				if(it2->second.dataDependency)
+					item = new QTableWidgetItem(tr("#%1").arg(it2->second.value));
+				else
+					item = new QTableWidgetItem(tr("%1").arg(it2->second.value));
 				memoryTable->insertColumn(cont);
 				memoryTable->setItem(0, cont, item);
 
 			}else{
-				item->setText(tr("%1").arg(it2->second));
+				if(it2->second.dataDependency)
+					item->setText(tr("#%1").arg(it2->second.value));
+				else
+					item->setText(tr("%1").arg(it2->second.value));
 			}
 			cont++;
 		}
@@ -177,15 +195,13 @@ void MainWidget::nextStep(){
 
 	int id;
 	for(map<string, Reg>::iterator it = interpreter->reg.begin(); it!=interpreter->reg.end(); it++){
+		if(it->first=="") continue;
 		id = atoi(it->first.substr(1).c_str());
+
 		updateRegister(id, it->second.value, it->second.dataDependency);
 	}
 
 
-	for(map<int, map<int, int> >::iterator it = interpreter->memory.begin(); it!=interpreter->memory.end(); it++){
-		for(map<int, int>::iterator it2 = it->second.begin(); it2!=it->second.end(); it2++){
-		}
-	}
 	updateReservationTable();
 	paintReservationTable(Qt::yellow, interpreter->emptyPos);
 
@@ -198,6 +214,7 @@ void MainWidget::nextStep(){
 }
 
 void MainWidget::updateDataTable(){
+
 	dataTable->item(0, 0)->setText(tr("%1").arg(interpreter->clock));
 	dataTable->item(1, 0)->setText(tr("%1").arg(interpreter->runnedCommands/1.0/interpreter->clock));
 	dataTable->item(2, 0)->setText(tr("%1").arg(current+1));

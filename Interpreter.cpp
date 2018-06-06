@@ -76,12 +76,20 @@ char Interpreter::novoCarac(){
 	return caracLido;
 }
 
+string Interpreter::toLower(string s){
+	for(int i = 0; i<s.length(); i++){
+		if(s[i]>=65 && s[i]<=90) s[i]+=32;
+	}
+	return s;
+}
+
 /**
 * Dada uma string, a classifica em um dos tipos definido no inicio do programa
 */
 atomo Interpreter::classificaCadeia(string cadeia){
 	atomo resp;
 	resp.tipo = resp.atrib.atr = 0;
+	cadeia = toLower(cadeia);
 	resp.atrib.cadeia = cadeia;
 
 	if(isalpha(cadeia[0])){
@@ -522,10 +530,10 @@ int Interpreter::runCommand(comand c, int vj, int vk){
 			return vj;
 			break;
 		case SAVE:
-			memory[c.p2.value][reg[c.p3.address].value] = reg[c.p1.address].value;
+			return reg[c.p1.address].value;
 			break;
 		case LOAD:
-			return memory[vj][vk];
+			return memory[vj][vk].value;
 		case BEQ:
 			if(reg[c.p1.address].value == reg[c.p2.address].value){
 				stk.push(pc);
@@ -584,7 +592,6 @@ int Interpreter::runCommand(comand c, int vj, int vk){
 
 void Interpreter::tryToGetValue(int id, char ch, string address){
 	if(reg[address].dataDependency){
-
 		if(ch=='j') tomasuloTable[id].qj = reg[address].value;
 		else tomasuloTable[id].qk = reg[address].value;
 	}else{
@@ -609,11 +616,11 @@ int Interpreter::getNextEmpty(int first, int last){
 }
 
 bool Interpreter::hasEnded(){
-	if(pc<listCommands.size()) return true;
+	if(pc<listCommands.size()) return false;
 	for(int i = 0; i<tomasuloTable.size(); i++){
-		if(tomasuloTable[i].busy) return true;
+		if(tomasuloTable[i].busy) return false;
 	}
-	return false;
+	return true;
 }
 
 void Interpreter::continueCommand(int id){
@@ -625,6 +632,13 @@ void Interpreter::continueCommand(int id){
 	if(reg[c.p1.address].dataDependency && reg[c.p1.address].value == id){
 		reg[c.p1.address].dataDependency = false;
 		reg[c.p1.address].value = val;
+	}else if(c.atrib == SAVE){
+		int a1 = c.p2.value;
+		int a2 = tomasuloTable[id].vk;
+		if(memory[a1][a2].value == id){
+			memory[a1][a2].value = val;
+			memory[a1][a2].dataDependency = false;
+		}
 	}
 	
 
@@ -665,6 +679,7 @@ int Interpreter::timeToFree(int x){
 }
 
 bool Interpreter::runNextLine(){
+	if(hasEnded()) return false;
 	clock++;
 	int id = -1;
 
@@ -742,6 +757,10 @@ bool Interpreter::runNextLine(){
 				tomasuloTable[id].clockToFinish += timeToFree(id);
 			break;
 		case LOAD:
+			if(reg[c.p3.address].dataDependency){
+				pc--;
+				break;
+			}
 			id = getNextEmpty(firstLoads, lastLoads);
 			if(id==-1){
 				pc--;
@@ -756,6 +775,10 @@ bool Interpreter::runNextLine(){
 				tomasuloTable[id].clockToFinish += timeToFree(id);
 			break;
 		case SAVE:
+			if(reg[c.p3.address].dataDependency){
+				pc--;
+				break;
+			}
 			id = getNextEmpty(firstLoads, lastLoads);
 			if(id==-1){
 				pc--;
@@ -768,7 +791,6 @@ bool Interpreter::runNextLine(){
 			tomasuloTable[id].clockToFinish = timeToFinishLoad;
 			if(tomasuloTable[id].qj==-1 && tomasuloTable[id].qk==-1)
 				tomasuloTable[id].clockToFinish += timeToFree(id);
-			id = -1;
 			break;
 		case BEQ:
 		case BNE:
@@ -788,8 +810,14 @@ bool Interpreter::runNextLine(){
 
 	}
 	if(id!=-1){
-		reg[c.p1.address].dataDependency = true;
-		reg[c.p1.address].value = id;
+		switch(c.atrib){
+			case SAVE:
+				memory[c.p2.value][reg[c.p3.address].value].dataDependency = true;
+			break;
+			default:
+				reg[c.p1.address].dataDependency = true;
+				reg[c.p1.address].value = id;
+		}
 	}
 	if(pc<listCommands.size()){
 		c = listCommands[pc];

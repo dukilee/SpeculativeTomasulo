@@ -92,12 +92,13 @@ public:
 	void continueCommand(int id);
 	void printaCommand(comand c);
 	int timeToFree(int x);
+	string toLower(string s);
 	pair<int, int> findInterval(int x);
 
 	vector<comand> listCommands;
 	map<string, int> labels;
 	map<string, Reg> reg;
-	map<int, map<int, int> > memory;
+	map<int, map<int, Reg> > memory;
 
 	vector<TomasuloTable> tomasuloTable;
 	vector<SpeculativeTable> speculativeTable;
