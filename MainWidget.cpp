@@ -72,7 +72,7 @@ void MainWidget::updateReservationTable(){
 
 		reservationTable->item(row, 0)->setText(tr("%1").arg(it->busy));
 		if(it->busy)
-			reservationTable->item(row, 1)->setText(tr("%1").arg(it->op));
+			reservationTable->item(row, 1)->setText(QString::fromStdString(interpreter->converteAtribPraNome(interpreter->listCommands[it->op].atrib)));
 		else
 			reservationTable->item(row, 1)->setText("");
 
@@ -85,17 +85,17 @@ void MainWidget::updateReservationTable(){
 		else
 			reservationTable->item(row, 3)->setText("");
 		if(it->qj>=0 && it->busy)
-			reservationTable->item(row, 4)->setText(tr("%1").arg(it->qj));
+			reservationTable->item(row, 4)->setText(tr("%1").arg(it->qj+1));
 		else
 			reservationTable->item(row, 4)->setText("");
 
 		if(it->qk>=0 && it->busy)
-			reservationTable->item(row, 5)->setText(tr("%1").arg(it->qk));
+			reservationTable->item(row, 5)->setText(tr("%1").arg(it->qk+1));
 		else
 			reservationTable->item(row, 5)->setText("");
 
 		if(it->busy)
-			reservationTable->item(row, 6)->setText(tr("%1").arg(it->d));
+			reservationTable->item(row, 6)->setText(QString::fromStdString(interpreter->listCommands[it->op].d));
 		else
 			reservationTable->item(row, 6)->setText("");
 	}
@@ -103,7 +103,7 @@ void MainWidget::updateReservationTable(){
 
 void MainWidget::integrateReservationTable(){
 	QStringList sListHor, sListVer;
-	sListHor<<"busy"<<"op"<<"vj"<<"vk"<<"qj"<<"qk"<<"d";
+	sListHor<<"busy"<<"op"<<"vj"<<"vk"<<"qj"<<"qk"<<"a";
 	for(int i = 0; i<7; i++){
 		reservationTable->insertColumn(i);
 	}

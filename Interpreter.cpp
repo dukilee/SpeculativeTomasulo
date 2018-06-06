@@ -29,6 +29,7 @@ Interpreter::Interpreter(string nomearq){
 	timeToFinishLoad = 4;
 	timeToFinishAdd = 2;
 	timeToFinishMult = 3;
+	timeToFinishDiv = 5;
 
 	firstLoads = 0;
 	lastLoads = numLoads - 1;
@@ -313,6 +314,9 @@ void Interpreter::comando(){
 	comand c;
 	c.tipo = atom.tipo;
 	c.atrib = atom.atrib.atr;
+	string axu;
+	int la;
+	char ch;
 	if(atom.tipo == COMANDO){
 		switch(atom.atrib.atr){
 			case ADD:
@@ -426,6 +430,16 @@ void Interpreter::comando(){
 
 				novoAtomo();
 				if(esperado(FPAR)) break;
+				la = c.p2.value;
+				axu = "";
+				do{
+					ch = la + 48;
+					axu += ch;
+					la /= 10;
+				}while(la>0);
+
+				c.d = axu + "(" + c.p3.address + ")";
+				
 				listCommands.push_back(c);
 				break;
 			case RETURN:
@@ -656,7 +670,18 @@ bool Interpreter::runNextLine(){
 			}
 			tryToGetValue(id, 'j', c.p2.address);
 			tryToGetValue(id, 'k', c.p3.address);
-			tomasuloTable[id].clockToFinish = timeToFinishAdd;
+			int timeToFinish;
+			switch(c.atrib){
+				case SUB:
+				case ADD:
+					timeToFinish = timeToFinishAdd;
+				case MULT:
+					timeToFinish = timeToFinishMult;
+				case DIV:
+					timeToFinish = timeToFinishDiv;
+					
+			}
+			tomasuloTable[id].clockToFinish = timeToFinish;
 			if(tomasuloTable[id].qj==-1 && tomasuloTable[id].qk==-1)
 				tomasuloTable[id].clockToFinish += clock;
 			break;

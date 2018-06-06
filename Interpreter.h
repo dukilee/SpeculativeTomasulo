@@ -40,6 +40,7 @@ struct comand{
 	int tipo, atrib;
 	param p1, p2, p3;
 	bool jmp;
+	string d;
 	int nParams;
 };
 
@@ -114,6 +115,7 @@ public:
 	int timeToFinishLoad;
 	int timeToFinishMult;
 	int timeToFinishAdd;
+	int timeToFinishDiv;
 	int runnedCommands;
 };
 
