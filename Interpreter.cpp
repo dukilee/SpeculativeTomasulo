@@ -14,6 +14,7 @@ Interpreter::Interpreter(string nomearq){
 	clock = 0;
 	emptyPos = -1;
 	runnedCommands=0;
+	sizeQueue = 6;
 
 	programa = fopen(nomearq.c_str(), "r");
 
@@ -50,6 +51,12 @@ Interpreter::Interpreter(string nomearq){
 	for(int i = 0; i<numMults; i++){
 		tomasuloTable[i+numLoads+numAdds].name = "MULT0";
 		tomasuloTable[i+numLoads+numAdds].name[4] = i + 48;
+	}
+
+	que.resize(sizeQueue);
+	contQueue = 0;
+	for(int i = 0; i<sizeQueue; i++){
+		que[i].busy = false;
 	}
 }
 
@@ -335,6 +342,7 @@ void Interpreter::comando(){
 	comand c;
 	c.tipo = atom.tipo;
 	c.atrib = atom.atrib.atr;
+	c.predictive = -1;
 	string axu;
 	int la;
 	char ch;
@@ -369,6 +377,7 @@ void Interpreter::comando(){
 			case BLE:
 			case BNE:
 			case BEQ:
+				c.predictive = 0;
 				c.nParams = 3;
 
 				novoAtomo();

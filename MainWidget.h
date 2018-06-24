@@ -23,6 +23,7 @@ private:
 	void integrateInstructionTable();
 	void integrateRegisterTable();
 	void integrateReservationTable();
+	void integrateQueueTable();
 	void integrateDataTable();
 	void updateMemoryTable();
 	void updateDataTable();
@@ -41,6 +42,7 @@ private:
 	QTableWidget* registerTable;
 	QTableWidget* dataTable;
 	QTableWidget* memoryTable;
+	QTableWidget* queueTable;
 	Interpreter* interpreter;
 
 	QGridLayout* mainLayout;

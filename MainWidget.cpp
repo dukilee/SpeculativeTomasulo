@@ -11,6 +11,7 @@ MainWidget::MainWidget(){
 	registerTable = new QTableWidget;
 	dataTable = new QTableWidget;
 	memoryTable = new QTableWidget;
+	queueTable = new QTableWidget;
 
 	playButton = new QPushButton(tr("&Run to end"));
 	stepButton = new QPushButton(tr("&Step"));
@@ -21,6 +22,7 @@ MainWidget::MainWidget(){
 	integrateRegisterTable();
 	integrateReservationTable();
 	integrateDataTable();
+	integrateQueueTable();
 
 	QStringList sList;
 	sList<<"Memory";
@@ -28,15 +30,29 @@ MainWidget::MainWidget(){
 	memoryTable->setVerticalHeaderLabels(sList);
 
 	mainLayout = new QGridLayout();
-	mainLayout->addWidget(instructionTable, 0, 0, 3, 2);
+	mainLayout->addWidget(instructionTable, 0, 0, 1, 1);
 	mainLayout->addWidget(dataTable, 3, 0, 2, 1);
 	mainLayout->addWidget(reservationTable, 0, 1, 1, 1);
 	mainLayout->addWidget(registerTable, 2, 1, 1, 1);
 	mainLayout->addWidget(memoryTable, 3, 1, 1, 1);
+	mainLayout->addWidget(queueTable, 2, 0, 1, 1); 
 	mainLayout->addWidget(playButton, 5, 0, Qt::AlignLeft);
 	mainLayout->addWidget(stepButton, 5, 1, Qt::AlignRight);
 	setLayout(mainLayout);
 	isRunning = false;
+}
+
+void MainWidget::integrateQueueTable(){
+	QStringList sList;
+	sList<<"Busy"<<"Instruction"<<"State"<<"Dest"<<"Val";
+	for(int i = 0; i<5; i++){
+		queueTable->insertColumn(i);
+	}
+	for(int i = 0; i<interpreter->sizeQueue; i++){
+		queueTable->insertRow(i);
+		queueTable->setItem(i, 0, new QTableWidgetItem("0"));
+	}
+	queueTable->setHorizontalHeaderLabels(sList);
 }
 
 void MainWidget::playButtonClicked(){
@@ -222,7 +238,7 @@ void MainWidget::updateDataTable(){
 }
 
 void MainWidget::integrateInstructionTable(){
-	for(int i = 0; i<4; i++){
+	for(int i = 0; i<5; i++){
 		instructionTable->insertColumn(i);
 	}
 	for(int i = 0; i<interpreter->listCommands.size(); i++){
@@ -252,6 +268,10 @@ void MainWidget::integrateInstructionTable(){
 		}else{
 			instructionTable->setItem(i, 3, new QTableWidgetItem(QString::fromStdString(c.p3.address)));
 		}
+
+		//bit
+		if(c.predictive>=0)
+			instructionTable->setItem(i, 4, new QTableWidgetItem(tr("%1").arg(c.predictive)));
 
 	}
 }

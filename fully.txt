@@ -1,14 +1,10 @@
-li r1, 11 
-li r2, 1
-sub r3, r3, r2
-goto main
+li r1, 10
 
-fat:
-beq r1, r0, main
-mul r2, r1, r2
-add r1, r1, r3	
-goto fat
+inicio:
+li r3, 1
+add r2, r2, r3 
+bne r2, r1, inicio
 
-main:
-bne r0, r1, fat
 
+fim:
+li r1, 7

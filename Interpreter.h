@@ -42,6 +42,7 @@ struct comand{
 	bool jmp;
 	string d;
 	int nParams;
+	int predictive;
 };
 
 struct TomasuloTable{
@@ -58,6 +59,13 @@ struct SpeculativeTable{
 struct Reg{
 	int value;
 	bool dataDependency;
+};
+
+struct Element{
+	comand c;
+	int val;
+	bool busy;
+	int state;
 };
 
 class Interpreter{
@@ -96,6 +104,7 @@ public:
 	pair<int, int> findInterval(int x);
 
 	vector<comand> listCommands;
+	vector<Element> que;
 	map<string, int> labels;
 	map<string, Reg> reg;
 	map<int, map<int, Reg> > memory;
@@ -120,6 +129,8 @@ public:
 	int timeToFinishAdd;
 	int timeToFinishDiv;
 	int runnedCommands;
+	int sizeQueue;
+	int contQueue;
 };
 
 #endif
