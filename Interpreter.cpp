@@ -561,12 +561,11 @@ int Interpreter::runCommand(comand c, int vj, int vk){
 				for(int i = 0; i<sizeQueue; i++){
 					comand t = que[i].c;
 					if(c.atrib == SAVE){
-						//int a1 = c.p2.value;
-						//int a2 = tomasuloTable[id].vk;
-						//memory[a1][a2].value = que[curr].val;
-						//if(memory[a1][a2].dependency == curr){
-							//memory[a1][a2].dataDependency = false;
-						//}
+						int a1 = c.p2.value;
+						int a2 = c.p3.value;
+						if(memory[a1][a2].dependency == i){
+							memory[a1][a2].dataDependency = false;
+						}
 					}else{
 						if(reg[t.p1.address].dataDependency && reg[t.p1.address].dependency == i){
 							reg[t.p1.address].dataDependency = false;
@@ -653,7 +652,8 @@ void Interpreter::continueCommand(int id){
 	//printaCommand(c);
 	int val = runCommand(c, tomasuloTable[id].vj, tomasuloTable[id].vk);
 	que[pos].val = val;
-
+	if(c.atrib == SAVE)
+		que[pos].c.p3.value = tomasuloTable[id].vk;
 	
 
 	bool changed = false;
@@ -713,7 +713,7 @@ bool Interpreter::runNextLine(){
 			que[curr].state = 3;
 			if(c.atrib == SAVE){
 				int a1 = c.p2.value;
-				int a2 = tomasuloTable[id].vk;
+				int a2 = c.p3.value;
 				memory[a1][a2].value = que[curr].val;
 				if(memory[a1][a2].dependency == curr){
 					memory[a1][a2].dataDependency = false;

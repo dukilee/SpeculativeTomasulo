@@ -140,7 +140,7 @@ void MainWidget::updateMemoryTable(){
 
 			if(item == NULL) {
 				if(it2->second.dataDependency)
-					item = new QTableWidgetItem(tr("#%1").arg(it2->second.value));
+					item = new QTableWidgetItem(tr("#%1").arg(it2->second.dependency+1));
 				else
 					item = new QTableWidgetItem(tr("%1").arg(it2->second.value));
 				memoryTable->insertColumn(cont);
@@ -148,7 +148,7 @@ void MainWidget::updateMemoryTable(){
 
 			}else{
 				if(it2->second.dataDependency)
-					item->setText(tr("#%1").arg(it2->second.value));
+					item->setText(tr("#%1").arg(it2->second.dependency + 1));
 				else
 					item->setText(tr("%1").arg(it2->second.value));
 			}
