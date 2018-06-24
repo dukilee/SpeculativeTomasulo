@@ -134,9 +134,9 @@ atomo Interpreter::classificaCadeia(string cadeia){
 		}else if(cadeia == "li"){
 			resp.tipo = COMANDO;
 			resp.atrib.atr = LI;
-		}else if(cadeia == "return"){
-			resp.tipo = COMANDO;
-			resp.atrib.atr = RETURN;
+		//}else if(cadeia == "return"){
+			//resp.tipo = COMANDO;
+			//resp.atrib.atr = RETURN;
 		}else if(cadeia == "goto"){
 			resp.tipo = COMANDO;
 			resp.atrib.atr = GOTO;
@@ -343,6 +343,7 @@ void Interpreter::comando(){
 	comand c;
 	c.tipo = atom.tipo;
 	c.atrib = atom.atrib.atr;
+	c.line = (int) listCommands.size();
 	c.predictive = -1;
 	string axu;
 	int la;
@@ -543,38 +544,51 @@ int Interpreter::runCommand(comand c, int vj, int vk){
 		case LOAD:
 			return memory[vj][vk].value;
 		case BEQ:
-			if(reg[c.p1.address].value == reg[c.p2.address].value){
-				stk.push(pc);
-				map<string, int>::iterator it = labels.find(c.p3.address);
-				if(it == labels.end()){
-					printf("The label '" RED "%s" RESET "' wasn't defined.\n", c.p3.address.c_str());
-				}else{
-					stk.push(pc);
-					pc = it->second;
+		case BNE:
+		case BLE:
+			bool condition;
+			vj = reg[c.p1.address].value;
+			vk = reg[c.p2.address].value;
+			switch(c.atrib){
+				case BEQ: condition = (vj == vk); break;
+				case BNE: condition = (vj != vk); break;
+				case BLE: condition = (vj <= vk); break;
+			}
+
+
+			if(condition != c.predictive){
+				contQueue = 0;
+				for(int i = 0; i<sizeQueue; i++){
+					comand t = que[i].c;
+					if(c.atrib == SAVE){
+						//int a1 = c.p2.value;
+						//int a2 = tomasuloTable[id].vk;
+						//memory[a1][a2].value = que[curr].val;
+						//if(memory[a1][a2].dependency == curr){
+							//memory[a1][a2].dataDependency = false;
+						//}
+					}else{
+						if(reg[t.p1.address].dataDependency && reg[t.p1.address].dependency == i){
+							reg[t.p1.address].dataDependency = false;
+						}
+					}
+					que[i].busy = false;
+
 				}
 
-			}
-			break;
-		case BNE:
-			if(reg[c.p1.address].value != reg[c.p2.address].value){
-				map<string, int>::iterator it = labels.find(c.p3.address);
-				if(it == labels.end()){
-					printf("The label '" RED "%s" RESET "' wasn't defined.\n", c.p3.address.c_str());
+				if(condition){
+					map<string, int>::iterator it = labels.find(c.p3.address);
+					if(it == labels.end()){
+						printf("The label '" RED "%s" RESET "' wasn't defined.\n", c.p3.address.c_str());
+					}else{
+						//stk.push(pc);
+						pc = it->second;
+					}
+
 				}else{
-					stk.push(pc);
-					pc = it->second;
+					pc = c.line+1;
 				}
-			}
-			break;
-		case BLE:
-			if(reg[c.p1.address].value <= reg[c.p2.address].value){
-				map<string, int>::iterator it = labels.find(c.p3.address);
-				if(it == labels.end()){
-					printf("The label '" RED "%s" RESET "' wasn't defined.\n", c.p3.address.c_str());
-				}else{
-					stk.push(pc);
-					pc = it->second;
-				}
+				listCommands[c.line].predictive = condition;
 			}
 			break;
 		case RETURN:
@@ -628,7 +642,7 @@ bool Interpreter::hasEnded(){
 	for(int i = 0; i<tomasuloTable.size(); i++){
 		if(tomasuloTable[i].busy) return false;
 	}
-	return true;
+	return contQueue==0;
 }
 
 void Interpreter::continueCommand(int id){
@@ -694,22 +708,31 @@ bool Interpreter::runNextLine(){
 
 	while(contQueue>0){
 		int curr = (posQueue + sizeQueue - contQueue)%sizeQueue;
+		comand c = que[curr].c;
 		if(que[curr].state==2){
 			que[curr].state = 3;
-			comand c = que[curr].c;
-			if(reg[c.p1.address].dataDependency && reg[c.p1.address].dependency == curr){
-				reg[c.p1.address].dataDependency = false;
-				reg[c.p1.address].value = que[curr].val;
-			}else if(c.atrib == SAVE){
+			if(c.atrib == SAVE){
 				int a1 = c.p2.value;
 				int a2 = tomasuloTable[id].vk;
+				memory[a1][a2].value = que[curr].val;
 				if(memory[a1][a2].dependency == curr){
-					memory[a1][a2].value = que[curr].val;
 					memory[a1][a2].dataDependency = false;
+				}
+			}else{
+				reg[c.p1.address].value = que[curr].val;
+				if(reg[c.p1.address].dataDependency && reg[c.p1.address].dependency == curr){
+					reg[c.p1.address].dataDependency = false;
 				}
 			}
 			que[curr].busy = false;
-			contQueue--;
+			if(contQueue>0)
+				contQueue--;
+		}else if(que[curr].state == 1 && (c.atrib==BLE || c.atrib==BEQ || c.atrib==BNE) ){
+			runCommand(c, 0, 0);
+			que[curr].state = 3;
+			que[curr].busy = false;
+			if(contQueue>0)
+				contQueue--;
 		}else break;
 	}
 
@@ -817,10 +840,16 @@ bool Interpreter::runNextLine(){
 		case BEQ:
 		case BNE:
 		case BLE:
-			if(reg[c.p1.address].dataDependency || reg[c.p2.address].dataDependency){
-				pc--;
-			}else{
-				runCommand(c, 0, 0);
+			id = -2;
+			if(c.predictive){
+				map<string, int>::iterator it = labels.find(c.p3.address);
+				if(it == labels.end()){
+					printf("The label '" RED "%s" RESET "' wasn't defined.\n", c.p3.address.c_str());
+				}else{
+					//stk.push(pc);
+					pc = it->second;
+				}
+
 			}
 			break;
 		case RETURN:
@@ -833,6 +862,7 @@ bool Interpreter::runNextLine(){
 	}
 	if(id!=-1){
 
+		if(id>=0)
 		switch(c.atrib){
 			case SAVE:
 				memory[c.p2.value][reg[c.p3.address].value].dataDependency = true;
@@ -843,7 +873,8 @@ bool Interpreter::runNextLine(){
 				reg[c.p1.address].dependency = posQueue;
 		}
 
-		tomasuloTable[id].posQueue = posQueue;
+		if(id>=0)
+			tomasuloTable[id].posQueue = posQueue;
 
 		que[posQueue].busy = 1;
 		que[posQueue].c = c;

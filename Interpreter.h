@@ -43,6 +43,7 @@ struct comand{
 	string d;
 	int nParams;
 	int predictive;
+	int line;
 };
 
 struct TomasuloTable{

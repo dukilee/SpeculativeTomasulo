@@ -54,9 +54,11 @@ void MainWidget::updateQueueTable(){
 
 		if(c.nParams>=1)
 		if(c.p1.address == ""){
+			if(comandString[0]!='B')
 			queueTable->item(i, 3)->setText(tr("%1").arg(c.p1.value));
 			comandString += " " + tr("%1").arg(c.p1.value);
 		}else{
+			if(comandString[0]!='B')
 			queueTable->item(i, 3)->setText(QString::fromStdString(c.p1.address));
 			comandString += " " + QString::fromStdString(c.p1.address);
 		}
@@ -90,6 +92,11 @@ void MainWidget::updateQueueTable(){
 		
 		i++;
 	}
+
+	for(int i = 0; i<interpreter->listCommands.size(); i++)
+		//bit
+		
+		instructionTable->item(i, 4)->setText((tr("%1").arg(interpreter->listCommands[i].predictive)));
 }
 
 void MainWidget::integrateQueueTable(){
@@ -254,7 +261,7 @@ void MainWidget::updateRegister(int id, int value, int dataDependency, int depen
 	item = registerTable->item(1, id);
 	msg = "";
 	if(dataDependency){
-		msg = "#" + tr("%1").arg(dependency);
+		msg = "#" + tr("%1").arg(dependency+1);
 	}
 	if(item == NULL) {
 		item = new QTableWidgetItem(msg);
@@ -334,9 +341,7 @@ void MainWidget::integrateInstructionTable(){
 			instructionTable->setItem(i, 3, new QTableWidgetItem(QString::fromStdString(c.p3.address)));
 		}
 
-		//bit
-		if(c.predictive>=0)
-			instructionTable->setItem(i, 4, new QTableWidgetItem(tr("%1").arg(c.predictive)));
+		instructionTable->setItem(i, 4, new QTableWidgetItem("-"));
 
 	}
 }
