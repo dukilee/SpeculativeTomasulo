@@ -42,6 +42,57 @@ MainWidget::MainWidget(){
 	isRunning = false;
 }
 
+void MainWidget::updateQueueTable(){
+	int i = 0;
+	for(vector<Element>::iterator it = interpreter->que.begin(); it!=interpreter->que.end(); it++){
+		queueTable->item(i, 0)->setText(tr("%1").arg(it->busy));
+		if(!it->busy) continue;
+		comand c = it->c;
+
+		QString comandString = QString::fromStdString(interpreter->converteAtribPraNome(c.atrib));
+		if(comandString=="")
+			comandString = QString::fromStdString(c.p1.address);
+
+		if(c.nParams>=1)
+		if(c.p1.address == ""){
+			queueTable->item(i, 3)->setText(tr("%1").arg(c.p1.value));
+			comandString += " " + tr("%1").arg(c.p1.value);
+		}else{
+			queueTable->item(i, 3)->setText(QString::fromStdString(c.p1.address));
+			comandString += " " + QString::fromStdString(c.p1.address);
+		}
+
+		if(c.nParams>=2)
+		if(c.p2.address == ""){
+			comandString += " " + tr("%1").arg(c.p2.value);
+		}else{
+			comandString += " " + QString::fromStdString(c.p2.address);
+		}
+
+		if(c.nParams>=3)
+		if(c.p3.address == ""){
+			comandString += " " + tr("%1").arg(c.p3.value);
+		}else{
+			comandString += " " + QString::fromStdString(c.p3.address);
+		}
+		queueTable->item(i, 1)->setText(comandString);
+
+		if(it->state==0) queueTable->item(i, 2)->setText("Emited");
+		else if(it->state==1) queueTable->item(i, 2)->setText("Run");
+		else if(it->state==2) queueTable->item(i, 2)->setText("Record");
+		else if(it->state==3) queueTable->item(i, 2)->setText("Consolidate");
+		else queueTable->item(i, 2)->setText("####");
+
+
+		if(it->state>1) queueTable->item(i, 4)->setText(tr("%1").arg(it->val));
+		else queueTable->item(i, 4)->setText("");
+		
+
+		
+		i++;
+	}
+}
+
 void MainWidget::integrateQueueTable(){
 	QStringList sList;
 	sList<<"Busy"<<"Instruction"<<"State"<<"Dest"<<"Val";
@@ -51,6 +102,9 @@ void MainWidget::integrateQueueTable(){
 	for(int i = 0; i<interpreter->sizeQueue; i++){
 		queueTable->insertRow(i);
 		queueTable->setItem(i, 0, new QTableWidgetItem("0"));
+		for(int j = 1; j<5; j++){
+			queueTable->setItem(i, j, new QTableWidgetItem(""));
+		}
 	}
 	queueTable->setHorizontalHeaderLabels(sList);
 }
@@ -224,6 +278,7 @@ void MainWidget::nextStep(){
 
 	updateDataTable();
 	updateMemoryTable();
+	updateQueueTable();
 
 
 	update();

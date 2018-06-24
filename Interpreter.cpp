@@ -816,6 +816,11 @@ bool Interpreter::runNextLine(){
 
 	}
 	if(id!=-1){
+		que[contQueue].busy = 1;
+		que[contQueue].c = c;
+		que[contQueue].state = 0;
+		contQueue = (contQueue+1)%sizeQueue;
+
 		switch(c.atrib){
 			case SAVE:
 				memory[c.p2.value][reg[c.p3.address].value].dataDependency = true;
