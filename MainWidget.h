@@ -28,7 +28,7 @@ private:
 	void updateMemoryTable();
 	void updateDataTable();
 	void updateReservationTable();
-	void updateRegister(int, int, int);
+	void updateRegister(int, int, int, int);
 	void updateQueueTable();
 	void paintReservationTable(QColor, int);
 	void setToRunning(int, int);

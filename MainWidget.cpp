@@ -46,7 +46,6 @@ void MainWidget::updateQueueTable(){
 	int i = 0;
 	for(vector<Element>::iterator it = interpreter->que.begin(); it!=interpreter->que.end(); it++){
 		queueTable->item(i, 0)->setText(tr("%1").arg(it->busy));
-		if(!it->busy) continue;
 		comand c = it->c;
 
 		QString comandString = QString::fromStdString(interpreter->converteAtribPraNome(c.atrib));
@@ -241,12 +240,9 @@ void MainWidget::integrateDataTable(){
 	dataTable->setVerticalHeaderLabels(sList);
 }
 
-void MainWidget::updateRegister(int id, int value, int dataDependency){
+void MainWidget::updateRegister(int id, int value, int dataDependency, int dependency){
 	QTableWidgetItem* item = registerTable->item(0, id);
 	QString msg = tr("%1").arg(value);
-
-	if(dataDependency)
-		msg = "#" + msg;
 
 	if(item == NULL) {
 		item = new QTableWidgetItem(msg);
@@ -254,6 +250,20 @@ void MainWidget::updateRegister(int id, int value, int dataDependency){
 	}else{
 		item->setText(msg);
 	}
+
+	item = registerTable->item(1, id);
+	msg = "";
+	if(dataDependency){
+		msg = "#" + tr("%1").arg(dependency);
+	}
+	if(item == NULL) {
+		item = new QTableWidgetItem(msg);
+		registerTable->setItem(1, id, item);
+	}else{
+		item->setText(msg);
+	}
+
+
 }
 
 void MainWidget::nextStep(){
@@ -268,7 +278,7 @@ void MainWidget::nextStep(){
 		if(it->first=="") continue;
 		id = atoi(it->first.substr(1).c_str());
 
-		updateRegister(id, it->second.value, it->second.dataDependency);
+		updateRegister(id, it->second.value, it->second.dataDependency, it->second.dependency);
 	}
 
 
@@ -333,7 +343,9 @@ void MainWidget::integrateInstructionTable(){
 
 void MainWidget::integrateRegisterTable(){
 	QStringList sList;
-	for(int i = 0; i<1; i++){
+	QStringList hList;
+	hList << "Val"<<"Stat";
+	for(int i = 0; i<2; i++){
 		registerTable->insertRow(i);
 	}
 	for(int i = 0; i<11; i++){
@@ -341,6 +353,7 @@ void MainWidget::integrateRegisterTable(){
 		sList << tr("R%1").arg(i);
 	}
 	registerTable->setHorizontalHeaderLabels(sList);
+	registerTable->setVerticalHeaderLabels(hList);
 
 }
 

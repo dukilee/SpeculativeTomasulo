@@ -55,6 +55,7 @@ Interpreter::Interpreter(string nomearq){
 
 	que.resize(sizeQueue);
 	contQueue = 0;
+	posQueue = 0;
 	for(int i = 0; i<sizeQueue; i++){
 		que[i].busy = false;
 	}
@@ -599,8 +600,8 @@ int Interpreter::runCommand(comand c, int vj, int vk){
 
 void Interpreter::tryToGetValue(int id, char ch, string address){
 	if(reg[address].dataDependency){
-		if(ch=='j') tomasuloTable[id].qj = reg[address].value;
-		else tomasuloTable[id].qk = reg[address].value;
+		if(ch=='j') tomasuloTable[id].qj = reg[address].dependency;
+		else tomasuloTable[id].qk = reg[address].dependency;
 	}else{
 		if(ch=='j') tomasuloTable[id].vj = reg[address].value;
 		else tomasuloTable[id].vk = reg[address].value;
@@ -632,33 +633,25 @@ bool Interpreter::hasEnded(){
 
 void Interpreter::continueCommand(int id){
 	comand c = listCommands[tomasuloTable[id].op];
+	int pos = tomasuloTable[id].posQueue;
+	que[pos].state = 2;
 	//cout<<"CONTINUE: ";
 	//printaCommand(c);
 	int val = runCommand(c, tomasuloTable[id].vj, tomasuloTable[id].vk);
+	que[pos].val = val;
 
-	if(reg[c.p1.address].dataDependency && reg[c.p1.address].value == id){
-		reg[c.p1.address].dataDependency = false;
-		reg[c.p1.address].value = val;
-	}else if(c.atrib == SAVE){
-		int a1 = c.p2.value;
-		int a2 = tomasuloTable[id].vk;
-		if(memory[a1][a2].value == id){
-			memory[a1][a2].value = val;
-			memory[a1][a2].dataDependency = false;
-		}
-	}
 	
 
 	bool changed = false;
 	for(int i = 0; i<tomasuloTable.size(); i++){
 		if(!tomasuloTable[i].busy) continue;
 		changed = false;
-		if(tomasuloTable[i].qj == id){
+		if(tomasuloTable[i].qj == pos){
 			tomasuloTable[i].vj = val;
 			tomasuloTable[i].qj = -1;
 			changed = true;
 		}
-		if(tomasuloTable[i].qk == id){
+		if(tomasuloTable[i].qk == pos){
 			tomasuloTable[i].vk = val;
 			tomasuloTable[i].qk = -1;
 			changed = true;
@@ -699,8 +692,31 @@ bool Interpreter::runNextLine(){
 	}
 	emptyPos = -1;
 
+	while(contQueue>0){
+		int curr = (posQueue + sizeQueue - contQueue)%sizeQueue;
+		if(que[curr].state==2){
+			que[curr].state = 3;
+			comand c = que[curr].c;
+			if(reg[c.p1.address].dataDependency && reg[c.p1.address].dependency == curr){
+				reg[c.p1.address].dataDependency = false;
+				reg[c.p1.address].value = que[curr].val;
+			}else if(c.atrib == SAVE){
+				int a1 = c.p2.value;
+				int a2 = tomasuloTable[id].vk;
+				if(memory[a1][a2].dependency == curr){
+					memory[a1][a2].value = que[curr].val;
+					memory[a1][a2].dataDependency = false;
+				}
+			}
+			que[curr].busy = false;
+			contQueue--;
+		}else break;
+	}
+
 	if(pc >= listCommands.size())
 		return hasEnded();
+	
+	if(contQueue>=sizeQueue) return hasEnded();
 
 	comand c = listCommands[pc++];
 	while(c.tipo != COMANDO) c = listCommands[pc++];
@@ -816,20 +832,24 @@ bool Interpreter::runNextLine(){
 
 	}
 	if(id!=-1){
-		que[contQueue].busy = 1;
-		que[contQueue].c = c;
-		que[contQueue].state = 0;
-		contQueue = (contQueue+1)%sizeQueue;
 
 		switch(c.atrib){
 			case SAVE:
 				memory[c.p2.value][reg[c.p3.address].value].dataDependency = true;
-				memory[c.p2.value][reg[c.p3.address].value].value = id;
+				memory[c.p2.value][reg[c.p3.address].value].dependency = posQueue;
 			break;
 			default:
 				reg[c.p1.address].dataDependency = true;
-				reg[c.p1.address].value = id;
+				reg[c.p1.address].dependency = posQueue;
 		}
+
+		tomasuloTable[id].posQueue = posQueue;
+
+		que[posQueue].busy = 1;
+		que[posQueue].c = c;
+		que[posQueue].state = 1;
+		posQueue = (posQueue+1)%sizeQueue;
+		contQueue++;
 	}
 	if(pc<listCommands.size()){
 		c = listCommands[pc];

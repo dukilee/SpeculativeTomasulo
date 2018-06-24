@@ -50,6 +50,7 @@ struct TomasuloTable{
 	int clockToFinish, op;
 	int vj, vk, qj, qk, d, a;
 	bool busy;
+	int posQueue;
 };
 
 struct SpeculativeTable{
@@ -59,6 +60,7 @@ struct SpeculativeTable{
 struct Reg{
 	int value;
 	bool dataDependency;
+	int dependency;
 };
 
 struct Element{
@@ -131,6 +133,7 @@ public:
 	int runnedCommands;
 	int sizeQueue;
 	int contQueue;
+	int posQueue;
 };
 
 #endif
