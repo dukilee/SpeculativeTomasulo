@@ -78,8 +78,18 @@ void MainWidget::updateQueueTable(){
 		}
 		queueTable->item(i, 1)->setText(comandString);
 
-		if(it->state==0) queueTable->item(i, 2)->setText("Emited");
-		else if(it->state==1) queueTable->item(i, 2)->setText("Run");
+		if(it->state<=1){
+			int line; 
+			for(int j = 0; j<interpreter->tomasuloTable.size(); j++){
+				if(!interpreter->tomasuloTable[j].busy) continue;
+				if(interpreter->tomasuloTable[j].posQueue == i){
+					line = j;
+					break;
+				}
+			}
+			queueTable->item(i, 2)->setText(reservationTable->item(line, 2)->text());
+		}
+
 		else if(it->state==2) queueTable->item(i, 2)->setText("Record");
 		else if(it->state==3) queueTable->item(i, 2)->setText("Consolidate");
 		else queueTable->item(i, 2)->setText("####");
@@ -238,9 +248,9 @@ void MainWidget::integrateReservationTable(){
 
 void MainWidget::integrateDataTable(){
 	QStringList sList;
-	sList<<"Clock"<<"CLI"<<"PC"<<"Instructions";
+	sList<<"Clock"<<"CLI"<<"PC"<<"Instructions"<<"CPI";
 	dataTable->insertColumn(0);
-	for(int i = 0; i<4; i++){
+	for(int i = 0; i<5; i++){
 		dataTable->insertRow(i);
 		dataTable->setItem(i, 0, new QTableWidgetItem("0"));
 	}
@@ -307,6 +317,8 @@ void MainWidget::updateDataTable(){
 	dataTable->item(1, 0)->setText(tr("%1").arg(interpreter->runnedCommands/1.0/interpreter->clock));
 	dataTable->item(2, 0)->setText(tr("%1").arg(current+1));
 	dataTable->item(3, 0)->setText(tr("%1").arg(interpreter->runnedCommands));
+	if(interpreter->runnedCommands>0)
+		dataTable->item(4, 0)->setText(tr("%1").arg(1.0*interpreter->clock/interpreter->runnedCommands));
 }
 
 void MainWidget::integrateInstructionTable(){

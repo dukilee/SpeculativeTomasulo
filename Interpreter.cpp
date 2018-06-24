@@ -28,7 +28,7 @@ Interpreter::Interpreter(string nomearq){
 	numAdds = 3;
 	numMults = 2;
 	timeToFinishLoad = 4;
-	timeToFinishAdd = 2;
+	timeToFinishAdd = 1;
 	timeToFinishMult = 3;
 	timeToFinishDiv = 5;
 
@@ -613,8 +613,14 @@ int Interpreter::runCommand(comand c, int vj, int vk){
 
 void Interpreter::tryToGetValue(int id, char ch, string address){
 	if(reg[address].dataDependency){
-		if(ch=='j') tomasuloTable[id].qj = reg[address].dependency;
-		else tomasuloTable[id].qk = reg[address].dependency;
+		int pos = reg[address].dependency;
+		if(que[pos].state<=1)
+			if(ch=='j') tomasuloTable[id].qj = reg[address].dependency;
+			else tomasuloTable[id].qk = reg[address].dependency;
+		else{
+			if(ch=='j') tomasuloTable[id].vj = que[pos].val;
+			else  tomasuloTable[id].vk = que[pos].val;
+		}
 	}else{
 		if(ch=='j') tomasuloTable[id].vj = reg[address].value;
 		else tomasuloTable[id].vk = reg[address].value;
@@ -706,7 +712,7 @@ bool Interpreter::runNextLine(){
 	}
 	emptyPos = -1;
 
-	while(contQueue>0){
+	if(contQueue>0){
 		int curr = (posQueue + sizeQueue - contQueue)%sizeQueue;
 		comand c = que[curr].c;
 		if(que[curr].state==2){
@@ -733,7 +739,7 @@ bool Interpreter::runNextLine(){
 			que[curr].busy = false;
 			if(contQueue>0)
 				contQueue--;
-		}else break;
+		}
 	}
 
 	if(pc >= listCommands.size())
